@@ -13,10 +13,11 @@ if __name__ == "__main__":
     # initialize forest fire model
     model = Forest(
         dimension=100,
-        density=0.8,
-        burnup_chance=0.1,
+        density=0.75,
+        burnup_time=6,
+        ignition_chance=0.0001,
         visualize=True
         )
 
     # run model
-    model.simulate()
+    model.simulate(waiting_time=100)

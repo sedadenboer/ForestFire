@@ -21,26 +21,28 @@ class Forest:
     EMPTY = 0
     TREE = 1
     FIRE = 2
+    BURNED = 3
     MOORE_NEIGHBORS = ((-1,-1), (-1,0), (-1,1), (0,-1), (0, 1), (1,-1), (1,0), (1,1))
     
-    def __init__(self, dimension: int, density: float, burnup_chance: float, visualize: bool) -> None:
+    def __init__(self, dimension: int, density: float, burnup_time: int, ignition_chance: float, visualize: bool) -> None:
         """Forest model of the region where forest fires occur. Represented by a 2D grid,
         containing "Plant" objects that represent generic trees in the basic version of the model.
-        The cells can be empty, tree, or a tree on fire. The state of the forest changes over time
+        The cells can be empty, tree, fire, or burned. The state of the forest changes over time
         according to the forest fire cellular automata model, where each cell interacts
         with its Moore neighborhood.
 
         Args:
             dimension (int): size of the grid
             density (float): forest density
-            burnup_chance (float): chance for a tree to burn down in a timestep
+            burnup_time (int): time for a tree to burn down
+            ignition_chance (float): chance for a random tree to catch fire
             visualize (bool): if a visualization should be made
         """
         # parameters
         self.dimension = dimension
         self.density = density
-        self.burnup_chance = burnup_chance
-        self.moore_coords = Forest.MOORE_NEIGHBORS
+        self.burnup_time = burnup_time
+        self.ignition_chance = ignition_chance
         self.grid = self.make_grid()
         self.frames = [self.get_forest_state()]
         self.visualize = visualize
@@ -76,7 +78,7 @@ class Forest:
         return grid
 
     def start_fire(self) -> None:
-        """Initializes the fire in a random cell
+        """Initializes a fire in a random cell
         by setting the Tree's state to fire.
         """
         tree = self.get_random_tree()
@@ -113,7 +115,7 @@ class Forest:
         neighbors = 0
 
         # iterate over moore neighborhood coordinates
-        for neighbor in self.moore_coords:
+        for neighbor in Forest.MOORE_NEIGHBORS:
             # extract vertical and horizontal displacements
             vert, hor = neighbor
             vert_neighbor = row + vert
@@ -165,7 +167,7 @@ class Forest:
                     return True
         return False
 
-    def forest_state(self) -> None:
+    def update_forest_state(self) -> None:
         """Updates the state of the forest based on forest fire spread rules.
         """
         for row_idx, row in enumerate(self.grid):
@@ -175,10 +177,18 @@ class Forest:
                     continue
                 
                 # if burning cell and random number <= burnup chance, change to empty
-                if plant.is_burning() and np.random.uniform() <= self.burnup_chance:
-                    plant.change_state(Forest.EMPTY)
+                if plant.is_burning():
+                    # increment the burning counter
+                    plant.burning_time += 1
+
+                    # if the burning counter reaches burnup time, change to burned state
+                    if plant.burning_time == self.burnup_time:
+                        plant.change_state(Forest.BURNED)
                 # if tree cell and random number <= fire chance, change to burning
                 elif plant.is_tree() and np.random.uniform() <= self.fire_chance(row_idx, col_idx):
+                    plant.change_state(Forest.FIRE)
+                # probablistically start random fires 
+                elif plant.is_tree() and np.random.uniform() <= self.ignition_chance:
                     plant.change_state(Forest.FIRE)
 
     def get_forest_state(self) -> List[List[int]]:
@@ -190,9 +200,12 @@ class Forest:
         """
         # extract states from Plant objects
         return [[plant.state for plant in row] for row in self.grid]
-        
-    def simulate(self) -> List[List[int]]:
+    
+    def simulate(self, waiting_time: int) -> List[List[int]]:
         """Simulate the forest fire spread and return the frames.
+
+        Args:
+            waiting_time (int): time to wait for a forest fire to develop
 
         Returns:
             List[List[int]]: list of frames capturing the forest state during the simulation
@@ -200,15 +213,15 @@ class Forest:
         # message to user
         print("Running simulation...")
 
-        # start the fire
-        self.start_fire()
-
-        while self.check_fire_forest():
-            # update forest state 
-            self.forest_state()
-
-            # add current state to frames
+        time = 0
+        
+        # keep running until waiting time for ignition or until fires are extinguished
+        while time <= waiting_time or self.check_fire_forest():
+            # update forest state and add current state to frames
+            self.update_forest_state()
             self.frames.append(self.get_forest_state())
+            
+            time += 1
         
         # finished message
         print("Simulation completed!")
@@ -217,7 +230,7 @@ class Forest:
             # visualize the simulation
             visualize(
                 self.frames, showplot=True, saveplot=True,
-                filename='simulation_animation', colors=['black', '#6E750E', 'crimson']
+                filename='simulation_animation', colors=['tan', '#6E750E', 'crimson', 'black']
             )
 
         return self.frames

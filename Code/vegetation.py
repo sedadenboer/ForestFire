@@ -16,6 +16,7 @@ class Plant:
             state (int): state of the plant
         """
         self.state = state
+        self.burning_time = 0
 
     def change_state(self, new_state: int) -> None:
         """Change the state of the plant.
@@ -41,6 +42,14 @@ class Plant:
         """
         return self.state == 1
 
+    def is_burned(self) -> bool:
+        """Check if the plant is burned.
+
+        Returns:
+            bool: True if the plant is burned, False otherwise
+        """
+        return self.state == 3
+    
     def is_empty(self) -> bool:
         """Check if the plant is empty.
 
