@@ -20,4 +20,8 @@ if __name__ == "__main__":
         )
 
     # run model
+<<<<<<< HEAD
     model.simulate(waiting_time=100)
+=======
+    model.simulate(waiting_time=100)
+>>>>>>> parent of d1331eb (beginning of percolation porbability)
