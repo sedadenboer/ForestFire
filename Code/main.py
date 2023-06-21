@@ -12,12 +12,13 @@ from forest import Forest
 if __name__ == "__main__":
     # initialize forest fire model
     model = Forest(
+        default=True,
         dimension=100,
-        density=0.75,
-        burnup_time=6,
-        ignition_chance=0.0001,
+        density=0.59,
+        burnup_time=1,
+        neighbourhood_type="von_neumann",
         visualize=True
         )
 
     # run model
-    model.simulate(waiting_time=100)
+    model.simulate()
