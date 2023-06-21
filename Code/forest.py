@@ -240,6 +240,7 @@ class Forest:
         while self.check_fire_forest() or not self.check_percolated():
             # update forest state and add current state to frames
             self.update_forest_state()
+            print(self.grid)
             self.frames.append(self.get_forest_state())
             
             time += 1

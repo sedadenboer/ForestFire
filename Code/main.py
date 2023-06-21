@@ -9,8 +9,8 @@
 
 from forest import Forest
 
-
-def experiment(densities, n_experiments, n_simulations, model):
+def experiment(densities, n_experiments, n_simulations,
+               default, dimension, burnup_time, ignition_chance, visualize):
 
     percolation_info = {}
 
@@ -22,6 +22,15 @@ def experiment(densities, n_experiments, n_simulations, model):
             percolation_count = 0
             # run simulation n times
             for _ in range(n_simulations):
+                model = Forest(
+                    default=default,
+                    dimension=dimension,
+                    density=p,
+                    burnup_time=burnup_time,
+                    ignition_chance=ignition_chance,
+                    visualize=visualize
+                    )
+                
                 model.simulate()
 
                 # check if percolation occured
@@ -44,22 +53,33 @@ def experiment(densities, n_experiments, n_simulations, model):
     return percolation_info
         
 
+# if __name__ == "__main__":
+    # initialize forest fire model
+       
+    # results = experiment(
+    #     densities=[0.2, 0.5, 0.7],
+    #     n_experiments=2,
+    #     n_simulations=3,
+    #     default=True,
+    #     dimension=400,
+    #     burnup_time=1,
+    #     ignition_chance=0.0001,
+    #     visualize=True
+    #     )
+    
+    # print("result:\n", results)
+
+
+
 if __name__ == "__main__":
     # initialize forest fire model
     model = Forest(
-        default=True,
-        dimension=20,
+        default=False,
+        dimension=100,
         density=0.75,
-        burnup_time=3,
+        burnup_time=1,
         ignition_chance=0.0001,
-        visualize=False
+        visualize=True
         )
     
-    results = experiment(
-        densities=[0.4, 0.5, 0.7],
-        n_experiments=2,
-        n_simulations=3,
-        model=model
-        )
-    
-    print("result:\n", results)
+    model.simulate()

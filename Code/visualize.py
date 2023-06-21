@@ -13,7 +13,7 @@ import matplotlib.animation as animation
 from typing import List
 
 
-def visualize(grid_values: List[List[int]], showplot: bool = True, saveplot: bool = True, 
+def visualize(grid_values: List[List[int]], showplot: bool = True, saveplot: bool = False, 
               filename: str = 'simulation_animation', colors: List[str] = ['black', 'green', 'red']):
     """Animates the Cellular automata simulation result.
 
