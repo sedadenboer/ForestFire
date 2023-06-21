@@ -84,30 +84,14 @@ class Forest:
         return grid
 
     def start_fire(self) -> None:
-        """Initializes a line of fire on top of grid.
-        """
-        # get cells on top of grid
-        for column in range(self.dimension):
-            cell = self.grid[0][column]
-            # if cell is a Tree set it on fire
+        """Initializes a line of fire on top of the grid."""
+        # get cells on the top row of the grid
+        top_row = self.grid[0]
+
+        for cell in top_row:
+            # check if the cell is a Tree and set it on fire
             if cell.is_tree():
                 cell.change_state(Forest.FIRE)
-
-    def get_random_tree(self) -> Plant:
-        """Get a random Tree.
-
-        Returns:
-            Plant: random Tree cell
-        """
-        # keep searching until randomly chosen cell is a Tree
-        while True:
-            row = np.random.randint(0, self.dimension)
-            col = np.random.randint(0, self.dimension)
-            plant = self.grid[row][col]
-
-            # if cell is a Tree, return the cell
-            if plant.is_tree():
-                return plant
 
     def get_lit_neighbors(self, row: int, col: int) -> Tuple[int, int]:
         """Calculates the number of neighboring cells and lit
@@ -216,6 +200,22 @@ class Forest:
         # extract states from Plant objects
         return np.array([[plant.state for plant in row] for row in self.grid])
     
+    def check_percolation(self) -> bool:
+        """Checks if the bottom row of self.grid contains any FIRE or BURNED cells.
+
+        Returns:
+            bool: True if the bottom row contains FIRE or BURNED cells, False otherwise.
+        """
+        # get cells on the bottom row of the grid
+        bottom_row = self.grid[-1]
+
+        for cell in bottom_row:
+            # check if a cell is on fire or has been burned
+            if cell.is_burning() or cell.is_burned():
+                return True
+        
+        return False
+    
     def simulate(self) -> List[List[int]]:
         """Simulate the forest fire spread and return the frames.
 
@@ -225,8 +225,8 @@ class Forest:
         Returns:
             List[List[int]]: list of frames capturing the forest state during the simulation
         """
-        # message to user
-        print("Running simulation...")
+        # # message to user
+        # print("Running simulation...")
 
         time = 0
 
@@ -241,8 +241,8 @@ class Forest:
             
             time += 1
         
-        # finished message
-        print("Simulation completed!")
+        # # finished message
+        # print("Simulation completed!")
 
         if self.visualize:
             # visualize the simulation
