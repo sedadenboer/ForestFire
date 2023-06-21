@@ -24,7 +24,7 @@ class Forest:
     BURNED = 3
     MOORE_NEIGHBORS = ((-1,-1), (-1,0), (-1,1), (0,-1), (0, 1), (1,-1), (1,0), (1,1))
     
-    def __init__(self, default: bool, dimension: int, density: float, burnup_time: int, ignition_chance: float, visualize: bool) -> None:
+    def __init__(self, dimension: int, density: float, burnup_time: int, ignition_chance: float, visualize: bool) -> None:
         """Forest model of the region where forest fires occur. Represented by a 2D grid,
         containing "Plant" objects that represent generic trees in the basic version of the model.
         The cells can be empty, tree, fire, or burned. The state of the forest changes over time
@@ -32,7 +32,6 @@ class Forest:
         with its Moore neighborhood.
 
         Args:
-            default (bool): runs default version with fire_chance=1
             dimension (int): size of the grid
             density (float): forest density
             burnup_time (int): time for a tree to burn down
@@ -40,7 +39,6 @@ class Forest:
             visualize (bool): if a visualization should be made
         """
         # parameters
-        self.default = default
         self.dimension = dimension
         self.density = density
         self.burnup_time = burnup_time
@@ -80,14 +78,11 @@ class Forest:
         return grid
 
     def start_fire(self) -> None:
-        """Initializes a line of fire on top of grid.
+        """Initializes a fire in a random cell
+        by setting the Tree's state to fire.
         """
-        # get cells on top of grid
-        for column in range(self.dimension):
-            cell = self.grid[0][column]
-            # if cell is a Tree set it on fire
-            if cell.is_tree():
-                cell.change_state(Forest.FIRE)
+        tree = self.get_random_tree()
+        tree.change_state(Forest.FIRE)
 
     def get_random_tree(self) -> Plant:
         """Get a random Tree.
@@ -107,8 +102,7 @@ class Forest:
 
     def get_lit_neighbors(self, row: int, col: int) -> Tuple[int, int]:
         """Calculates the number of neighboring cells and lit
-        (burning) neighboring cells for a given cell. Total neighbors
-        is not always 8 because a cell can be on the edge of  grid.
+        (burning) neighboring cells for a given cell.
 
         Args:
             row (int): row coordinate
@@ -143,7 +137,7 @@ class Forest:
 
     def fire_chance(self, row: int, col: int) -> float:
         """Calculates the probability of a cell catching fire based on the number of lit (burning)
-        neighboring cells. The default model has a fire chance of 1 for the fire to spread to neighbors.
+        neighboring cells.
 
         Args:
             row (int): row coordinate
@@ -152,17 +146,13 @@ class Forest:
         Returns:
             float: probability of the cell catching fire
         """
-        # if default model chance is 1, otherwise calculate probability
-        if self.default:
-            return 1
-        else:
-            # get count of total neighbors and lit neighbors
-            total_neighbors = self.get_lit_neighbors(row, col)[0]
-            lit_neighbors_num = self.get_lit_neighbors(row, col)[1]
+        # get count of total neighbors and lit neighbors
+        total_neighbors = self.get_lit_neighbors(row, col)[0]
+        lit_neighbors_num = self.get_lit_neighbors(row, col)[1]
 
-            # calculate probability of catching fire
-            chance_fire = lit_neighbors_num / total_neighbors
-            return chance_fire
+        # calculate probability of catching fire
+        chance_fire = lit_neighbors_num / total_neighbors
+        return chance_fire
 
     def check_fire_forest(self) -> bool:
         """Checks if the forest is on fire somewhere.
@@ -175,20 +165,6 @@ class Forest:
             for plant in row:
                 if plant.is_burning():
                     return True
-        return False
-    
-    def check_percolated(self) -> bool:
-        """Checks if the fire has reached the bottom of the grid.
-
-        Returns:
-            bool: True if fire reached bottom, otherwise False.
-        """
-        for col in range(self.dimension):
-            # get cells on bottom of grid
-            cell = self.grid[self.dimension - 1][col]
-            # if there is a burning cell or cell has burned return True
-            if cell.is_burning() or cell.is_burned():
-                return True
         return False
 
     def update_forest_state(self) -> None:
@@ -211,6 +187,9 @@ class Forest:
                 # if tree cell and random number <= fire chance, change to burning
                 elif plant.is_tree() and np.random.uniform() <= self.fire_chance(row_idx, col_idx):
                     plant.change_state(Forest.FIRE)
+                # probablistically start random fires 
+                elif plant.is_tree() and np.random.uniform() <= self.ignition_chance:
+                    plant.change_state(Forest.FIRE)
 
     def get_forest_state(self) -> List[List[int]]:
         """Extracts states from Plant objects and returns them in a 2D list.
@@ -221,9 +200,12 @@ class Forest:
         """
         # extract states from Plant objects
         return [[plant.state for plant in row] for row in self.grid]
-                
-    def simulate(self) -> List[List[int]]:
+    
+    def simulate(self, waiting_time: int) -> List[List[int]]:
         """Simulate the forest fire spread and return the frames.
+
+        Args:
+            waiting_time (int): time to wait for a forest fire to develop
 
         Returns:
             List[List[int]]: list of frames capturing the forest state during the simulation
@@ -232,12 +214,9 @@ class Forest:
         print("Running simulation...")
 
         time = 0
-
-        # start the fire
-        self.start_fire()
         
         # keep running until waiting time for ignition or until fires are extinguished
-        while self.check_fire_forest() or not self.check_percolated():
+        while time <= waiting_time or self.check_fire_forest():
             # update forest state and add current state to frames
             self.update_forest_state()
             print(self.grid)
