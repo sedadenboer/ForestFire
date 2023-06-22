@@ -7,6 +7,7 @@
 # represents the vegetation in the forest. Contains functions
 # to change the Plant state and to check for its possible states.
 
+import constants
 
 class Plant:
     def __init__(self, state):
@@ -26,29 +27,45 @@ class Plant:
         """
         self.state = new_state
 
-    def is_burning(self) -> bool:
+    def is_burning(self) -> int:
         """Check if the plant is burning.
 
         Returns:
-            bool: True if the plant is burning, False otherwise
+            int: True if the plant is burning, False otherwise
         """
-        return self.state == 2
+        return self.state == 10
 
-    def is_tree(self) -> bool:
+    def is_tree(self) -> int:
         """Check if the plant is a tree.
 
         Returns:
-            bool: True if the plant is a tree, False otherwise
+            int: True if the plant is a tree, False otherwise
         """
         return self.state == 1
+    
+    def is_grass(self) -> int:
+        """Check if the plant is a grass.
 
-    def is_burned(self) -> bool:
+        Returns:
+            int: True if the plant is a grass, False otherwise
+        """
+        return self.state == 2
+    
+    def is_shrub(self) -> int:
+        """Check if the plant is a shrub.
+
+        Returns:
+            int: True if the plant is a shrub, False otherwise
+        """
+        return self.state == 3
+
+    def is_burned(self) -> int:
         """Check if the plant is burned.
 
         Returns:
-            bool: True if the plant is burned, False otherwise
+            int: True if the plant is burned, False otherwise
         """
-        return self.state == 3
+        return self.state == -1
     
     def is_empty(self) -> bool:
         """Check if the plant is empty.
@@ -57,6 +74,19 @@ class Plant:
             bool: True if the plant is empty, False otherwise
         """
         return self.state == 0
+    
+    def igni_probability(self) -> float:
+        """Return the probability associated with vegetation
+
+        Returns:
+            float: vegetation ignition probability
+        """
+        if self.state == 1: # tree
+            return constants.TREE
+        elif self.state == 2: # grass
+            return constants.GRASS
+        elif self.state == 3: # shrub
+            return constants.SHRUB
 
     def __repr__(self) -> str:
         """Return a string representation of the plant.
