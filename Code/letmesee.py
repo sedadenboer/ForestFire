@@ -1,15 +1,3 @@
-# forest.py
-#
-# Course: Complex System Simulation, UvA
-# Year: 2022/2023
-# 
-# Description: Contains the Forest class that represents the simulation
-# area for forest fires to occur. It contains methods for initializing
-# the forest, starting a fire, updating the state of the forest, and visualizing
-# the simulation.
-# 
-# Dependencies: vegetation.py, visualize.py
-
 import numpy as np
 from vegetation import Plant
 from visualize import visualize
@@ -22,11 +10,6 @@ class Forest:
     FIRE = 2
     BURNED = 3
     MOORE_NEIGHBORS = ((-1,-1), (-1,0), (-1,1), (0,-1), (0, 1), (1,-1), (1,0), (1,1))
-    MOORE_NEIGHBORS_DOUBLE = ((-2,-2), (-2,-1), (-2,0), (-2,1), (-2,2),
- (-1,-2), (-1,-1), (-1,0), (-1,1), (-1,2),
-  (0,-2),  (0,-1),  (0,1),  (0,2),
-  (1,-2),  (1,-1),  (1,0),  (1,1),  (1,2),
- (2,-2),  (2,-1),  (2,0),  (2,1),  (2,2))
     wind_factor = 0.1  # an arbitrary factor to control the influence of wind
 
     def __init__(self, dimension: int, density: float, burnup_time: int, ignition_chance: float, visualize: bool, double_cel: bool, wind_direction: str, wind_factor: float) -> None:
