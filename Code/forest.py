@@ -14,18 +14,22 @@ import numpy as np
 from vegetation import Plant
 from visualize import visualize
 from typing import List, Tuple
+import constants
 
 
 class Forest:
     # cell states and neighbor indices (Moore neighborhood)
-    EMPTY = 0
-    TREE = 1
-    FIRE = 2
-    BURNED = 3
+    # EMPTY = 0
+    # TREE = 1
+    # GRASS = 2
+    # SHRUB = 3
+    # FIRE = 10
+    # BURNED = -1
     MOORE_NEIGHBOURS = ((-1,-1), (-1,0), (-1,1), (0,-1), (0, 1), (1,-1), (1,0), (1,1))
     VON_NEUMANN_NEIGHBOURS = ((-1, 0), (0, -1), (0, 1), (1, 0))
     
-    def __init__(self, default: bool, dimension: int, density: float, burnup_time: int, neighbourhood_type: str, visualize: bool) -> None:
+    def __init__(self, grid_type: str, dimension: int, density: float, burnup_time: int, 
+                 neighbourhood_type: str, visualize: bool, vegetation_grid: List[List[int]] = None) -> None:
         """Forest model of the region where forest fires occur. Represented by a 2D grid,
         containing "Plant" objects that represent generic trees in the basic version of the model.
         The cells can be empty, tree, fire, or burned. The state of the forest changes over time
@@ -33,15 +37,17 @@ class Forest:
         with its Moore neighborhood.
 
         Args:
-            default (bool): runs default version with fire_chance=1
+            grid_type (str): the layout of vegetation ('default' or 'mixed')
             dimension (int): size of the grid
             density (float): forest density
             burnup_time (int): time for a tree to burn down
             neighbourhood_type (str): "moore" or "von_neumann"
             visualize (bool): if a visualization should be made
+            vegetation_grid (List(List(int))):  if grid_type = 'mixed', 2d matrix specifying the vegetation layout
         """
         # parameters
-        self.default = default
+        self.grid_type = grid_type
+        self.veg_grid = np.array(vegetation_grid)
         self.dimension = dimension
         self.density = density
         self.burnup_time = burnup_time
@@ -65,22 +71,29 @@ class Forest:
         # fill grid with "empty" Plant objects
         for i in range(self.dimension):
             for j in range(self.dimension):
-                grid[i][j] = Plant(Forest.EMPTY)
-
-        # choose random spots in the grid to place trees, according to predefined density
-        trees_number = round((self.dimension ** 2) * self.density)
-        tree_indices = np.random.choice(
-            range(self.dimension * self.dimension),
-            trees_number,
-            replace=False
-        )
-
-        # place trees on randomly chosen cells
-        for index in tree_indices:
-            row = index // self.dimension
-            col = index % self.dimension
-            grid[row][col] = Plant(Forest.TREE)
-
+                grid[i][j] = Plant(constants.EMPTY)
+        
+        if self.grid_type == 'default':
+            # choose random spots in the grid to place trees, according to predefined density
+            trees_number = round((self.dimension ** 2) * self.density)
+            tree_indices = np.random.choice(
+                range(self.dimension * self.dimension),
+                trees_number,
+                replace=False
+            )
+            
+            # place trees on randomly chosen cells
+            for index in tree_indices:
+                row = index // self.dimension
+                col = index % self.dimension
+                grid[row][col] = Plant(constants.TREE)
+                
+        else:
+            # place plants according to the grid vegetation layout
+            for i in range(self.veg_grid.shape[0]):
+                for j in range(self.veg_grid.shape[1]):
+                    grid[i][j] = Plant(self.veg_grid[i][j])
+        
         return grid
 
     def start_fire(self) -> None:
@@ -91,7 +104,7 @@ class Forest:
         for cell in top_row:
             # check if the cell is a Tree and set it on fire
             if cell.is_tree():
-                cell.change_state(Forest.FIRE)
+                cell.change_state(constants.FIRE)
 
     def get_lit_neighbors(self, row: int, col: int) -> Tuple[int, int]:
         """Calculates the number of neighboring cells and lit
@@ -142,9 +155,15 @@ class Forest:
         # get count of total neighbors and lit neighbors
         total_neighbors = self.get_lit_neighbors(row, col)[0]
         lit_neighbors_num = self.get_lit_neighbors(row, col)[1]
+        
+        if self.grid_type == 'default':
+            site_igni_p, site_humidity_p = 1, 1
+        else:
+            site_igni_p = self.grid[row, col].igni_probability()
+            site_humidity_p = self.grid[row, col].humidity_effect()
     
-        # calculate probability of catching fire
-        chance_fire = lit_neighbors_num / total_neighbors
+        # calculate probability of catching fire (with ignition p and humedity effect)
+        chance_fire = lit_neighbors_num / total_neighbors * site_igni_p * site_humidity_p
         return chance_fire
 
     def check_fire_forest(self) -> bool:
@@ -156,8 +175,8 @@ class Forest:
         # Convert the grid to a NumPy array
         grid_array = self.get_forest_state()
 
-        # Check if the value 2 exists in the grid
-        is_present = np.any(grid_array == 2)
+        # Check if the Fire value exists in the grid
+        is_present = np.any(grid_array == constants.FIRE)
 
         if is_present:
             return True
@@ -177,7 +196,7 @@ class Forest:
                 # if the cell is burning and the burning counter reaches burnup time, change to burned state
                 if plant.is_burning():
                     if plant.burning_time == self.burnup_time:
-                        plant.change_state(Forest.BURNED)
+                        plant.change_state(constants.BURNED)
                     else:
                         # increment the burning counter
                         plant.burning_time += 1
@@ -188,7 +207,7 @@ class Forest:
         # set the tree cells on fire after iterating over all cells
         for cell in cells_to_set_on_fire:
             row_idx, col_idx = cell
-            self.grid[row_idx][col_idx].change_state(Forest.FIRE)
+            self.grid[row_idx][col_idx].change_state(constants.FIRE)
     
     def get_forest_state(self) -> List[List[int]]:
         """Extracts states from Plant objects and returns them in a 2D list.

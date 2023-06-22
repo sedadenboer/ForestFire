@@ -13,6 +13,7 @@ from forest import Forest
 from typing import List, Dict
 import json
 from plot import density_lineplot
+import constants
 
 
 def experiment(densities: List[float], n_experiments: int, n_simulations: int,
@@ -94,6 +95,9 @@ if __name__ == "__main__":
                         help='Specify the mode to run (test, crit_p)')
 
     args = parser.parse_args()
+    
+    plant_type = [constants.EMPTY,constants.TREE,constants.GRASS,constants.SHRUB]
+    plant_prob = [0.2, 0.4, 0.2, 0.2]
 
     # if no argument provided
     if args.mode is None:
@@ -101,7 +105,8 @@ if __name__ == "__main__":
     # default test run
     elif args.mode == 'test':
         model = Forest(
-            default=True,
+            grid_type='mixed',
+            vegetation_grid=np.random.choice(plant_type, size=(100, 100), p=plant_prob),
             dimension=100,
             density=0.65,
             burnup_time=1,

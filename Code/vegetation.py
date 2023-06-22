@@ -81,12 +81,25 @@ class Plant:
         Returns:
             float: vegetation ignition probability
         """
-        if self.state == 1: # tree
-            return constants.TREE
-        elif self.state == 2: # grass
-            return constants.GRASS
-        elif self.state == 3: # shrub
-            return constants.SHRUB
+        if self.state == constants.TREE: # tree
+            return constants.P_TREE
+        elif self.state == constants.GRASS: # grass
+            return constants.P_GRASS
+        elif self.state == constants.SHRUB: # shrub
+            return constants.P_SHRUB
+        
+    def humidity_effect(self) -> float:
+        """Return the humidity effect associated with vegetation
+
+        Returns:
+            float: vegetation humidity effect probability
+        """
+        if self.state == constants.TREE: # tree
+            return constants.H_TREE
+        elif self.state == constants.GRASS: # grass
+            return constants.H_GRASS
+        elif self.state == constants.SHRUB: # shrub
+            return constants.H_SHRUB
 
     def __repr__(self) -> str:
         """Return a string representation of the plant.
