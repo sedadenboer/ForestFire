@@ -12,7 +12,7 @@ import numpy as np
 from forest import Forest
 from typing import List, Dict
 import json
-from plot import density_lineplot
+from plot import density_lineplot, multiple_plots
 
 
 def experiment(densities: List[float], n_experiments: int, n_simulations: int,
@@ -62,7 +62,7 @@ def experiment(densities: List[float], n_experiments: int, n_simulations: int,
                 # run simulation
                 model.simulate()
 
-                # check if percolation occured
+                # check if percolation occured and for how many fore pixels
                 if model.check_percolation():
                     percolation_count += 1
 
@@ -80,9 +80,9 @@ def experiment(densities: List[float], n_experiments: int, n_simulations: int,
     print(percolation_info)
     print()
 
-    if save_data:
-        with open('Output/percolation_data.json', 'w') as fp:
-            json.dump(percolation_info, fp)
+    # if save_data:
+    #     with open('Output/percolation_data.json', 'w') as fp:
+    #         json.dump(percolation_info, fp)
 
     return percolation_info
 
@@ -90,8 +90,8 @@ def experiment(densities: List[float], n_experiments: int, n_simulations: int,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Forest Fire Model')
 
-    parser.add_argument('mode', nargs='?', choices=['test', 'crit_p'],
-                        help='Specify the mode to run (test, crit_p)')
+    parser.add_argument('mode', nargs='?', choices=['test', 'crit_p', 'dimensions'],
+                        help='Specify the mode to run (test, crit_p, dimensions)')
 
     args = parser.parse_args()
 
@@ -126,4 +126,28 @@ if __name__ == "__main__":
         )
 
         # Make a density lineplot
-        density_lineplot(results, savefig=True)
+        density_lineplot(results, savefig=False)
+
+    elif args.mode == 'dimensions':
+        multiple_results = {}
+        step = 0.05
+        dimensions = [5, 25, 50, 100]
+        for d in dimensions:
+            results = experiment(
+                densities=np.arange(0.25, 0.75 + step, step),
+                n_experiments=5,
+                n_simulations=10,
+                default=True,
+                dimension=d,
+                burnup_time=1,
+                neighbourhood_type="von_neumann",
+                visualize=False,
+                save_data=True
+        )      
+            # save percolation probabilities per experiment in a dictionary
+            if d in multiple_results:
+                multiple_results[d].append(results)
+            else:
+                multiple_results[d] = [results]
+
+        multiple_plots(multiple_results, savefig=False)

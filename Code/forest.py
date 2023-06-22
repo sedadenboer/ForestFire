@@ -240,9 +240,6 @@ class Forest:
             self.frames.append(self.get_forest_state())
             
             time += 1
-        
-        # # finished message
-        # print("Simulation completed!")
 
         if self.visualize:
             # visualize the simulation
@@ -252,3 +249,24 @@ class Forest:
             )
 
         return self.frames
+
+    def forest_decrease(self) -> float:
+        """Calculates the percentage difference in trees between the first and last frame.
+
+        Returns:
+            float: percentage tree decrease
+        """
+
+        initial_trees = 0
+        final_trees = 0
+        for row_idx, row in enumerate(self.frames[0]):
+            for col_idx, plant in enumerate(row):
+                if plant.is_tree():
+                    initial_trees += 1
+
+        for row_idx, row in enumerate(self.frames[-1]):
+            for col_idx, plant in enumerate(row):
+                if plant.is_tree():
+                    final_trees += 1
+
+        return (initial_trees - final_trees) / initial_trees * 100
