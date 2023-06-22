@@ -45,6 +45,7 @@ class Forest:
         self.dimension = dimension
         self.density = density
         self.burnup_time = burnup_time
+        self.flux = 0
         self.grid = self.make_grid()
         self.frames = [self.get_forest_state()]
         self.visualize = visualize
@@ -268,5 +269,5 @@ class Forest:
             for col_idx, plant in enumerate(row):
                 if plant.is_tree():
                     final_trees += 1
-
-        return (initial_trees - final_trees) / initial_trees * 100
+                    
+        self.flux = (initial_trees - final_trees) / initial_trees * 100

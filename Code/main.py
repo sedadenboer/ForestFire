@@ -12,7 +12,7 @@ import numpy as np
 from forest import Forest
 from typing import List, Dict
 import json
-from plot import density_lineplot, multiple_plots
+from plot import density_lineplot, multiple_plots, scatter_plot
 
 
 def experiment(densities: List[float], n_experiments: int, n_simulations: int,
@@ -90,8 +90,8 @@ def experiment(densities: List[float], n_experiments: int, n_simulations: int,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Forest Fire Model')
 
-    parser.add_argument('mode', nargs='?', choices=['test', 'crit_p', 'dimensions'],
-                        help='Specify the mode to run (test, crit_p, dimensions)')
+    parser.add_argument('mode', nargs='?', choices=['test', 'crit_p', 'dimensions', 'beta'],
+                        help='Specify the mode to run (test, crit_p, dimensions, beta)')
 
     args = parser.parse_args()
 
@@ -151,3 +151,20 @@ if __name__ == "__main__":
                 multiple_results[d] = [results]
 
         multiple_plots(multiple_results, savefig=False)
+
+    # lineplot run for determining critical density
+    elif args.mode == 'beta':
+        step = 0.005 # 0.005 maybe
+        results = experiment(
+            densities=np.arange(0.58, 0.62 + step, step),
+            n_experiments=5,
+            n_simulations=10,
+            default=True,
+            dimension=25, # 50 at least
+            burnup_time=1,
+            neighbourhood_type="von_neumann",
+            visualize=False,
+            save_data=True
+        )
+
+        scatter_plot(results, savefig=False)
