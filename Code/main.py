@@ -101,7 +101,7 @@ if __name__ == "__main__":
     parser.add_argument('--burnup', type=int, required=False, help='fire burnup time')
     # vegetation ratio input
     parser.add_argument('--veg_ratio', type=float, required=False, nargs=3, action='store',
-                        help='The ratio of vegetaion in the grid, format: [tree] [grass] [shrub]')
+                        help='The ratio of vegetation in the grid, format: [tree] [grass] [shrub]')
     # vegetation grid type input
     parser.add_argument('grid_type', nargs='?', choices=['stripe', 'block', 'random'],
                         help='Specify the mode to run (test, crit_p)')
@@ -157,12 +157,12 @@ if __name__ == "__main__":
     # default test run
     elif args.mode == 'test':
         model = Forest(
-            grid_type='mixed',
+            grid_type='default',
             vegetation_grid=grid,
             dimension=dimension,
             density=density,
             burnup_time=burnup_t,
-            neighbourhood_type="von_neumann",
+            neighbourhood_type="moore",
             visualize=True
         )
         
@@ -177,7 +177,7 @@ if __name__ == "__main__":
             default=True,
             dimension=50,
             burnup_time=burnup_t,
-            neighbourhood_type="von_neumann",
+            neighbourhood_type="moore",
             visualize=False,
             save_data=True
         )

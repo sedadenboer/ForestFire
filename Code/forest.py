@@ -2,12 +2,12 @@
 #
 # Course: Complex System Simulation, UvA
 # Year: 2022/2023
-# 
+#
 # Description: Contains the Forest class that represents the simulation
 # area for forest fires to occur. It contains methods for initializing
 # the forest, starting a fire, updating the state of the forest, and visualizing
 # the simulation.
-# 
+#
 # Dependencies: vegetation.py, visualize.py
 
 import numpy as np
@@ -25,10 +25,10 @@ class Forest:
     # SHRUB = 3
     # FIRE = 10
     # BURNED = -1
-    MOORE_NEIGHBOURS = ((-1,-1), (-1,0), (-1,1), (0,-1), (0, 1), (1,-1), (1,0), (1,1))
+    MOORE_NEIGHBOURS = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
     VON_NEUMANN_NEIGHBOURS = ((-1, 0), (0, -1), (0, 1), (1, 0))
-    
-    def __init__(self, grid_type: str, dimension: int, density: float, burnup_time: int, 
+
+    def __init__(self, grid_type: str, dimension: int, density: float, burnup_time: int,
                  neighbourhood_type: str, visualize: bool, vegetation_grid: List[List[int]] = None) -> None:
         """Forest model of the region where forest fires occur. Represented by a 2D grid,
         containing "Plant" objects that represent generic trees in the basic version of the model.
@@ -72,7 +72,7 @@ class Forest:
         for i in range(self.dimension):
             for j in range(self.dimension):
                 grid[i][j] = Plant(constants.EMPTY)
-        
+
         if self.grid_type == 'default':
             # choose random spots in the grid to place trees, according to predefined density
             trees_number = round((self.dimension ** 2) * self.density)
@@ -81,20 +81,43 @@ class Forest:
                 trees_number,
                 replace=False
             )
-            
+
             # place trees on randomly chosen cells
             for index in tree_indices:
                 row = index // self.dimension
                 col = index % self.dimension
                 grid[row][col] = Plant(constants.TREE)
-                
+
         else:
             # place plants according to the grid vegetation layout
             for i in range(self.veg_grid.shape[0]):
                 for j in range(self.veg_grid.shape[1]):
                     grid[i][j] = Plant(self.veg_grid[i][j])
-        
+
         return grid
+
+    def get_random_tree(self) -> Plant:
+        """Get a random Tree.
+
+        Returns:
+            Plant: random Tree cell
+        """
+        # keep searching until randomly chosen cell is a Tree
+        while True:
+            row = np.random.randint(0, self.dimension)
+            col = np.random.randint(0, self.dimension)
+            plant = self.grid[row][col]
+
+            if plant.is_tree():
+                # if cell is a Tree, return the cell
+                return plant
+        
+        return None
+
+    def start_fire_randomly(self) -> None:
+        """Initializes a cell of fire randomly somehwere."""
+        tree = self.get_random_tree()
+        tree.change_state(constants.FIRE)
 
     def start_fire(self) -> None:
         """Initializes a line of fire on top of the grid."""
@@ -129,8 +152,8 @@ class Forest:
 
             # check if the neighboring cell is within the grid bounds
             if (
-                vert_neighbor >= 0 and vert_neighbor < self.dimension and
-                hor_neighbor >= 0 and hor_neighbor < self.dimension
+                    vert_neighbor >= 0 and vert_neighbor < self.dimension and
+                    hor_neighbor >= 0 and hor_neighbor < self.dimension
             ):
                 # increment the count of the total neighbors
                 neighbors += 1
@@ -155,13 +178,13 @@ class Forest:
         # get count of total neighbors and lit neighbors
         total_neighbors = self.get_lit_neighbors(row, col)[0]
         lit_neighbors_num = self.get_lit_neighbors(row, col)[1]
-        
+
         if self.grid_type == 'default':
             site_igni_p, site_humidity_p = 1, 1
         else:
             site_igni_p = self.grid[row, col].igni_probability()
             site_humidity_p = self.grid[row, col].humidity_effect()
-    
+
         # calculate probability of catching fire (with ignition p and humedity effect)
         chance_fire = lit_neighbors_num / total_neighbors * site_igni_p * site_humidity_p
         return chance_fire
@@ -203,8 +226,8 @@ class Forest:
                 # # if the cell is a tree and has a burning neighbor, add it to the list
                 # elif plant.is_tree() or plant.is_grass() or plant.is_shrub() and self.get_lit_neighbors(row_idx, col_idx)[1] > 0:
                 #     cells_to_set_on_fire.append((row_idx, col_idx))
-                    
-                # if the cell is a tree and has a burning neighbor, compute the fire chance 
+
+                # if the cell is a tree and has a burning neighbor, compute the fire chance
                 # to decide if adding it to the list
                 elif plant.is_tree() or plant.is_grass() or plant.is_shrub():
                     ignition_p = self.fire_chance(row_idx, col_idx)
@@ -215,7 +238,7 @@ class Forest:
         for cell in cells_to_set_on_fire:
             row_idx, col_idx = cell
             self.grid[row_idx][col_idx].change_state(constants.FIRE)
-    
+
     def get_forest_state(self) -> List[List[int]]:
         """Extracts states from Plant objects and returns them in a 2D list.
         This is to have an integer representation of the grid.
@@ -225,7 +248,7 @@ class Forest:
         """
         # extract states from Plant objects
         return np.array([[plant.state for plant in row] for row in self.grid])
-    
+
     def check_percolation(self) -> bool:
         """Checks if the bottom row of self.grid contains any FIRE or BURNED cells.
 
@@ -239,9 +262,9 @@ class Forest:
             # check if a cell is on fire or has been burned
             if cell.is_burning() or cell.is_burned():
                 return True
-        
+
         return False
-    
+
     def simulate(self) -> List[List[int]]:
         """Simulate the forest fire spread and return the frames.
 
@@ -257,16 +280,16 @@ class Forest:
         time = 0
 
         # start fire
-        self.start_fire()
-        
+        self.start_fire_randomly()
+
         # keep running until waiting time for ignition or until fires are extinguished
         while self.check_fire_forest():
             # update forest state and add current state to frames
             self.update_forest_state()
             self.frames.append(self.get_forest_state())
-            
+
             time += 1
-        
+
         # # finished message
         # print("Simulation completed!")
 
@@ -274,7 +297,7 @@ class Forest:
             # visualize the simulation
             visualize(
                 self.frames, showplot=True, saveplot=True,
-                filename='simulation_animation', colors=['tan', '#6E750E', 'crimson', 'black']
+                filename='simulation_animation', colors=['tan', 'forestgreen', 'yellowgreen', 'olivedrab', 'crimson', 'black']
             )
 
         return self.frames

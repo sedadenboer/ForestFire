@@ -12,8 +12,8 @@ EMPTY = 0
 TREE = 1
 GRASS = 2
 SHRUB = 3
-FIRE = 10
-BURNED = 11
+FIRE = 4
+BURNED = 5
 
 ###################### Ignition probability ######################
 P_TREE = 1
@@ -21,6 +21,6 @@ P_GRASS = 1
 P_SHRUB = 0.25
 
 ###################### Humidity reaction ######################
-H_TREE = 0.3
-H_SHRUB = 0.6
-H_GRASS = 0.7
+H_TREE = 1
+H_SHRUB = 1
+H_GRASS = 1

@@ -9,6 +9,7 @@
 
 import constants
 
+
 class Plant:
     def __init__(self, state):
         """Initialize a Plant object with the given state.
@@ -33,7 +34,7 @@ class Plant:
         Returns:
             int: True if the plant is burning, False otherwise
         """
-        return self.state == 10
+        return self.state == constants.FIRE
 
     def is_tree(self) -> int:
         """Check if the plant is a tree.
@@ -41,23 +42,23 @@ class Plant:
         Returns:
             int: True if the plant is a tree, False otherwise
         """
-        return self.state == 1
-    
+        return self.state == constants.TREE
+
     def is_grass(self) -> int:
         """Check if the plant is a grass.
 
         Returns:
             int: True if the plant is a grass, False otherwise
         """
-        return self.state == 2
-    
+        return self.state == constants.GRASS
+
     def is_shrub(self) -> int:
         """Check if the plant is a shrub.
 
         Returns:
             int: True if the plant is a shrub, False otherwise
         """
-        return self.state == 3
+        return self.state == constants.SHRUB
 
     def is_burned(self) -> int:
         """Check if the plant is burned.
@@ -65,40 +66,40 @@ class Plant:
         Returns:
             int: True if the plant is burned, False otherwise
         """
-        return self.state == -1
-    
+        return self.state == constants.BURNED
+
     def is_empty(self) -> bool:
         """Check if the plant is empty.
 
         Returns:
             bool: True if the plant is empty, False otherwise
         """
-        return self.state == 0
-    
+        return self.state == constants.EMPTY
+
     def igni_probability(self) -> float:
         """Return the probability associated with vegetation
 
         Returns:
             float: vegetation ignition probability
         """
-        if self.state == constants.TREE: # tree
+        if self.state == constants.TREE:  # tree
             return constants.P_TREE
-        elif self.state == constants.GRASS: # grass
+        elif self.state == constants.GRASS:  # grass
             return constants.P_GRASS
-        elif self.state == constants.SHRUB: # shrub
+        elif self.state == constants.SHRUB:  # shrub
             return constants.P_SHRUB
-        
+
     def humidity_effect(self) -> float:
         """Return the humidity effect associated with vegetation
 
         Returns:
             float: vegetation humidity effect probability
         """
-        if self.state == constants.TREE: # tree
+        if self.state == constants.TREE:  # tree
             return constants.H_TREE
-        elif self.state == constants.GRASS: # grass
+        elif self.state == constants.GRASS:  # grass
             return constants.H_GRASS
-        elif self.state == constants.SHRUB: # shrub
+        elif self.state == constants.SHRUB:  # shrub
             return constants.H_SHRUB
 
     def __repr__(self) -> str:
