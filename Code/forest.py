@@ -200,9 +200,16 @@ class Forest:
                     else:
                         # increment the burning counter
                         plant.burning_time += 1
-                # if the cell is a tree and has a burning neighbor, add it to the list
-                elif plant.is_tree() and self.get_lit_neighbors(row_idx, col_idx)[1] > 0:
-                    cells_to_set_on_fire.append((row_idx, col_idx))
+                # # if the cell is a tree and has a burning neighbor, add it to the list
+                # elif plant.is_tree() or plant.is_grass() or plant.is_shrub() and self.get_lit_neighbors(row_idx, col_idx)[1] > 0:
+                #     cells_to_set_on_fire.append((row_idx, col_idx))
+                    
+                # if the cell is a tree and has a burning neighbor, compute the fire chance 
+                # to decide if adding it to the list
+                elif plant.is_tree() or plant.is_grass() or plant.is_shrub():
+                    ignition_p = self.fire_chance(row_idx, col_idx)
+                    if np.random.random() <= ignition_p:
+                        cells_to_set_on_fire.append((row_idx, col_idx))
 
         # set the tree cells on fire after iterating over all cells
         for cell in cells_to_set_on_fire:

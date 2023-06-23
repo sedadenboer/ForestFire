@@ -93,11 +93,63 @@ if __name__ == "__main__":
 
     parser.add_argument('mode', nargs='?', choices=['test', 'crit_p'],
                         help='Specify the mode to run (test, crit_p)')
+    # grid dimension input
+    parser.add_argument('--dimension', type=int, required=False, help='dimension of the grid')
+    # grid dimension input
+    parser.add_argument('--density', type=float, required=False, help='density of the plant')
+    # fire burnup time input
+    parser.add_argument('--burnup', type=int, required=False, help='fire burnup time')
+    # vegetation ratio input
+    parser.add_argument('--veg_ratio', type=float, required=False, nargs=3, action='store',
+                        help='The ratio of vegetaion in the grid, format: [tree] [grass] [shrub]')
+    # vegetation grid type input
+    parser.add_argument('grid_type', nargs='?', choices=['stripe', 'block', 'random'],
+                        help='Specify the mode to run (test, crit_p)')
 
     args = parser.parse_args()
     
+    ################ Take inputs ################
+    
+    if args.dimension is not None:
+        dimension = args.dimension
+    else:
+        dimension = 50
+    if args.density is not None:
+        density = args.density
+    else:
+        density = 0.65
+    if args.burnup is not None:
+        burnup_t = args.burnup
+    else:
+        burnup_t = 1
+    # take vegetation ratio from input
+    if args.veg_ratio is not None:
+        veg_ratio = args.veg_ratio
+    else:
+        veg_ratio = []
+        
+    # compute the vegetaion layout grid as a 2d matrix
     plant_type = [constants.EMPTY,constants.TREE,constants.GRASS,constants.SHRUB]
-    plant_prob = [0.2, 0.4, 0.2, 0.2]
+    # initialize the grid
+    grid = np.zeros((dimension,dimension))
+    try:
+        if args.grid_type == 'stripe':
+            lengths = np.round(np.array(veg_ratio) * len(grid[:,0])).astype(int)
+            splits = np.split(np.arange(dimension), np.cumsum(lengths)[:-1])
+            
+            # fill in the grid
+            for i, split in enumerate(splits):
+                grid[split] = np.random.choice([constants.EMPTY,plant_type[i+1]], 
+                                                    size=(len(split), dimension), p=[1-density,density])
+                
+        elif args.grid_type == 'block':
+            ...
+        elif args.grid_type == 'random':
+            p_list = np.concatenate([np.array([1-density]), np.array(veg_ratio)*density])
+            grid = np.random.choice(plant_type, size=(dimension, dimension), p=p_list)
+    except:
+        print("Must specify vegetaion ratio if you want to enable vegetation grid!!!")
+        
 
     # if no argument provided
     if args.mode is None:
@@ -106,10 +158,10 @@ if __name__ == "__main__":
     elif args.mode == 'test':
         model = Forest(
             grid_type='mixed',
-            vegetation_grid=np.random.choice(plant_type, size=(100, 100), p=plant_prob),
-            dimension=100,
-            density=0.65,
-            burnup_time=1,
+            vegetation_grid=grid,
+            dimension=dimension,
+            density=density,
+            burnup_time=burnup_t,
             neighbourhood_type="von_neumann",
             visualize=True
         )
@@ -124,7 +176,7 @@ if __name__ == "__main__":
             n_simulations=10,
             default=True,
             dimension=50,
-            burnup_time=1,
+            burnup_time=burnup_t,
             neighbourhood_type="von_neumann",
             visualize=False,
             save_data=True
