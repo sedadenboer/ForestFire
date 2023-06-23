@@ -92,10 +92,9 @@ def scatter_plot(data: Dict, savefig: bool) -> None:
 
     # plot the scatter plot
     plt.figure()
-    sns.set_style("ticks")
-    sns.scatterplot(data=df, x='p', y='Probability',
-                 color='seagreen', markers=True)
-    # sns.regplot(data=df, x='p', y='Probability')
+    # sns.scatterplot(data=df, x='p', y='Probability',
+    #              color='seagreen', markers=True)
+    plt.scatter(data=df, x='p', y='Probability')
     plt.xlabel('p')
     plt.ylabel('Probability of percolation')
     if savefig:

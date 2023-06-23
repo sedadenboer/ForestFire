@@ -38,8 +38,8 @@ def visualize(grid_values: List[List[int]], showplot: bool = True, saveplot: boo
 
     ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True, repeat_delay=1000)
 
-    if saveplot:
-        ani.save('Output/' + filename + '.gif', writer=animation.PillowWriter(fps=60))
+    # if saveplot:
+    #     ani.save('Output/' + filename + '.gif', writer=animation.PillowWriter(fps=60))
 
     if showplot:
         plt.show()

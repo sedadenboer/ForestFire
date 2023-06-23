@@ -262,12 +262,14 @@ class Forest:
         final_trees = 0
         for row_idx, row in enumerate(self.frames[0]):
             for col_idx, plant in enumerate(row):
-                if plant.is_tree():
+                if plant == 1:
                     initial_trees += 1
 
         for row_idx, row in enumerate(self.frames[-1]):
             for col_idx, plant in enumerate(row):
-                if plant.is_tree():
+                if plant == 1:
                     final_trees += 1
                     
         self.flux = (initial_trees - final_trees) / initial_trees * 100
+
+        return self.flux

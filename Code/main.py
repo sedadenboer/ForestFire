@@ -110,6 +110,7 @@ if __name__ == "__main__":
         )
         
         model.simulate()
+        print(f'The forest area decreased by {model.forest_decrease()} %')
     # lineplot run for determining critical density
     elif args.mode == 'crit_p':
         step = 0.01
@@ -127,6 +128,7 @@ if __name__ == "__main__":
 
         # Make a density lineplot
         density_lineplot(results, savefig=False)
+        
 
     elif args.mode == 'dimensions':
         multiple_results = {}
