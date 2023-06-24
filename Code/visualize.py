@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colors as c
 import matplotlib.animation as animation
 from typing import List
+import constants as const
 
 
 def visualize(grid_values: List[List[int]], showplot: bool = True, saveplot: bool = True, 
@@ -28,10 +29,21 @@ def visualize(grid_values: List[List[int]], showplot: bool = True, saveplot: boo
 
     # set up figure and colors
     fig = plt.figure(figsize=(8, 8))
-    cmap = c.ListedColormap(colors)
+    
+    state_list = [const.EMPTY, const.TREE, const.GRASS, const.SHRUB, const.FIRE, const.BURNED]
+    color_list = [const.EMPTY_C, const.TREE_C, const.GRASS_C, const.SHRUB_C, const.FIRE_C, const.BURNED_C]
+    # to avoid conflicting color map
+    ims = []
+    for grid in grid_values:
+        states = np.unique(grid)
+        colors = [color_list[state_list.index(state)] for state in states]
+        
+        # This step is necessary, for correct color mapping
+        for i, j in enumerate(states):
+            grid[grid==j] = np.arange(len(colors))[i]
 
-    # plot frames
-    ims = [[plt.imshow(grid, vmin=0, vmax=len(colors), cmap=cmap, animated=True)] for grid in grid_values]
+        cmap = c.ListedColormap(colors)
+        ims.append([plt.imshow(grid, cmap=cmap, animated=True)])
 
     plt.axis('off')
     plt.tight_layout()

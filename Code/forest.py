@@ -297,7 +297,7 @@ class Forest:
             # visualize the simulation
             visualize(
                 self.frames, showplot=True, saveplot=True,
-                filename='simulation_animation', colors=['tan', 'forestgreen', 'yellowgreen', 'olivedrab', 'crimson', 'black']
+                filename='simulation_animation'
             )
 
         return self.frames

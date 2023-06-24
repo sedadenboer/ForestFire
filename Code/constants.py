@@ -24,3 +24,11 @@ P_SHRUB = 0.25
 H_TREE = 1
 H_SHRUB = 1
 H_GRASS = 1
+
+###################### State colors ######################
+EMPTY_C = 'tan'
+TREE_C = 'forestgreen'
+GRASS_C = 'yellowgreen'
+SHRUB_C = 'olivedrab'
+FIRE_C = 'crimson'
+BURNED_C = 'black'

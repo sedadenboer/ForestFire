@@ -157,7 +157,7 @@ if __name__ == "__main__":
     # default test run
     elif args.mode == 'test':
         model = Forest(
-            grid_type='default',
+            grid_type='mixed',
             vegetation_grid=grid,
             dimension=dimension,
             density=density,
