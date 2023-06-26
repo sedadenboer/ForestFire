@@ -39,5 +39,5 @@ def density_lineplot(data: Dict, savefig: bool) -> None:
     plt.xlabel('p')
     plt.ylabel('Probability of percolation')
     if savefig:
-        plt.savefig('Plots/density_lineplot.png', dpi=400)
+        plt.savefig('Plots/density_lineplot_veg_bt.png', dpi=400)
     plt.show()

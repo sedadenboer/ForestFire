@@ -28,8 +28,8 @@ class Forest:
     MOORE_NEIGHBOURS = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
     VON_NEUMANN_NEIGHBOURS = ((-1, 0), (0, -1), (0, 1), (1, 0))
 
-    def __init__(self, grid_type: str, dimension: int, density: float, burnup_time: int,
-                 neighbourhood_type: str, visualize: bool, vegetation_grid: List[List[int]] = None) -> None:
+    def __init__(self, grid_type: str, dimension: int, density: float, burnup_time: int, veg_ratio: List[float],
+                 neighbourhood_type: str, visualize: bool) -> None:
         """Forest model of the region where forest fires occur. Represented by a 2D grid,
         containing "Plant" objects that represent generic trees in the basic version of the model.
         The cells can be empty, tree, fire, or burned. The state of the forest changes over time
@@ -37,20 +37,20 @@ class Forest:
         with its Moore neighborhood.
 
         Args:
-            grid_type (str): the layout of vegetation ('default' or 'mixed')
+            grid_type (str): the layout of vegetation ('default' or 'stripe' / 'vertical' / 'random')
             dimension (int): size of the grid
             density (float): forest density
             burnup_time (int): time for a tree to burn down
+            veg_ratio (List[float]): the ratio between different vegetation type
             neighbourhood_type (str): "moore" or "von_neumann"
             visualize (bool): if a visualization should be made
-            vegetation_grid (List(List(int))):  if grid_type = 'mixed', 2d matrix specifying the vegetation layout
         """
         # parameters
         self.grid_type = grid_type
-        self.veg_grid = np.array(vegetation_grid)
         self.dimension = dimension
         self.density = density
         self.burnup_time = burnup_time
+        self.veg_ratio = veg_ratio
         self.grid = self.make_grid()
         self.frames = [self.get_forest_state()]
         self.visualize = visualize
@@ -72,6 +72,8 @@ class Forest:
         for i in range(self.dimension):
             for j in range(self.dimension):
                 grid[i][j] = Plant(constants.EMPTY)
+                
+        plant_type = [constants.EMPTY,constants.TREE,constants.GRASS,constants.SHRUB]
 
         if self.grid_type == 'default':
             # choose random spots in the grid to place trees, according to predefined density
@@ -87,12 +89,38 @@ class Forest:
                 row = index // self.dimension
                 col = index % self.dimension
                 grid[row][col] = Plant(constants.TREE)
-
+                
         else:
+            veg_grid = np.zeros((self.dimension,self.dimension))
+                
+            if self.grid_type == 'stripe':
+                lengths = np.round(np.array(self.veg_ratio) * len(grid[:,0])).astype(int)
+                splits = np.split(np.arange(self.dimension), np.cumsum(lengths)[:-1])
+                
+                # fill in the grid
+                for i, split in enumerate(splits):
+                    veg_grid[split] = np.random.choice([constants.EMPTY,plant_type[i+1]], 
+                                                    size=(len(split), self.dimension), p=[1-self.density,self.density])
+                    
+            elif self.grid_type == 'vertical':
+                lengths = np.round(np.array(self.veg_ratio) * len(grid[:,0])).astype(int)
+                splits = np.split(np.arange(self.dimension), np.cumsum(lengths)[:-1])
+                
+                # fill in the grid
+                for i, split in enumerate(splits):
+                    veg_grid[split] = np.random.choice([constants.EMPTY,plant_type[i+1]], 
+                                                    size=(len(split), self.dimension), p=[1-self.density,self.density])
+                    
+                veg_grid = np.rot90(veg_grid)
+            
+            elif self.grid_type == 'random':
+                p_list = np.concatenate([np.array([1-self.density]), np.array(self.veg_ratio)*self.density])
+                veg_grid = np.random.choice(plant_type, size=(self.dimension, self.dimension), p=p_list)
+
             # place plants according to the grid vegetation layout
-            for i in range(self.veg_grid.shape[0]):
-                for j in range(self.veg_grid.shape[1]):
-                    grid[i][j] = Plant(self.veg_grid[i][j])
+            for i in range(veg_grid.shape[0]):
+                for j in range(veg_grid.shape[1]):
+                    grid[i][j] = Plant(veg_grid[i][j])
 
         return grid
 
@@ -187,6 +215,7 @@ class Forest:
 
         # calculate probability of catching fire (with ignition p and humedity effect)
         chance_fire = lit_neighbors_num / total_neighbors * site_igni_p * site_humidity_p
+        # chance_fire = site_igni_p * site_humidity_p
         return chance_fire
 
     def check_fire_forest(self) -> bool:
@@ -280,7 +309,8 @@ class Forest:
         time = 0
 
         # start fire
-        self.start_fire_randomly()
+        # self.start_fire_randomly()
+        self.start_fire()
 
         # keep running until waiting time for ignition or until fires are extinguished
         while self.check_fire_forest():
