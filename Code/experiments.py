@@ -48,7 +48,10 @@ def experiment(densities: List[float], n_experiments: int, n_simulations: int,
             print("\nEXPERIMENT:", n, "\n")
 
             percolation_count = 0
-            model = Forest(
+            
+            # of a predefined range of simulations
+            for _ in range(n_simulations):
+                model = Forest(
                     grid_type=grid_type,
                     vegetation_grid=vegetation_grid,
                     dimension=dimension,
@@ -57,10 +60,7 @@ def experiment(densities: List[float], n_experiments: int, n_simulations: int,
                     neighbourhood_type=neighbourhood_type,
                     visualize=visualize
                 )
-            
-            # of a predefined range of simulations
-            for _ in range(n_simulations):
-            
+                
                 # run simulation
                 model.simulate()
 
