@@ -90,15 +90,7 @@ class Forest:
         Returns:
             Plant: random Tree cell
         """
-        # keep searching until randomly chosen cell is a Tree
-        # while True:
-        #     row = np.random.randint(0, self.dimension)
-        #     col = np.random.randint(0, self.dimension)
-        #     plant = self.grid[row][col]
-
-        #     if plant.is_tree():
-        #         # if cell is a Tree, return the cell
-        #         return plant
+        # choose random tree
         random_plant = np.random.choice(self.tree_indices)
         row = random_plant // self.dimension
         col = random_plant % self.dimension
@@ -254,15 +246,14 @@ class Forest:
         """Calculates the percentage difference in trees between the first and last frame.
 
         Returns:
-            float: percentage tree decrease
+            float: ratio of final trees/intial trees
         """
+        initial_trees = np.count_nonzero(self.frames[0] == constants.TREE)
+        final_trees = np.count_nonzero(self.frames[-1] == constants.TREE)
 
-        initial_trees = np.count_nonzero(self.frames[0] == 1)
-        final_trees = np.count_nonzero(self.frames[-1] == 1)
+        flux = (final_trees / initial_trees)
 
-        self.flux = (initial_trees - final_trees) / initial_trees * 100
-
-        return self.flux
+        return flux
     
     def update_forest_state(self) -> None:
         """Updates the state of the forest based on forest fire spread rules.
@@ -282,10 +273,6 @@ class Forest:
                     else:
                         # increment the burning counter
                         plant.burning_time += 1
-                # # if the cell is a tree and has a burning neighbor, add it to the list
-                # elif plant.is_tree() or plant.is_grass() or plant.is_shrub() and self.get_lit_neighbors(row_idx, col_idx)[1] > 0:
-                #     cells_to_set_on_fire.append((row_idx, col_idx))
-
                 # if the cell is a tree and has a burning neighbor, compute the fire chance
                 # to decide if adding it to the list
                 elif plant.is_tree() or plant.is_grass() or plant.is_shrub():

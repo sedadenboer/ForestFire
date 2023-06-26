@@ -24,7 +24,6 @@ def density_lineplot(data: Dict, filename: str, savefig: bool) -> None:
         filename (str): experiment specific filename
         savefig (bool): True if figure should be saved, otherwise False
     """
-
     # create a DataFrame from the dictionary
     df = pd.DataFrame.from_dict(data)
     # reset the index and melt the DataFrame
@@ -43,5 +42,30 @@ def density_lineplot(data: Dict, filename: str, savefig: bool) -> None:
         plt.savefig(f'Plots/{filename}.png', dpi=400)
     plt.show()
 
-def forest_decrease_lineplot(data: Dict):
-    pass
+def forest_decrease_lineplot(data: Dict, filename: str, savefig: bool) -> None:
+    """Makes a lineplot of the forest decrease ratio for different
+    values of the forest density, with 95% confidence interval for
+    n experiments and m simulations of the forest fire model.
+
+    Args:
+        data (Dict): forest decrease data of experiment
+        filename (str): experiment specific filename
+        savefig (bool): True if figure should be saved, otherwise False
+    """
+    # create a DataFrame from the dictionary
+    df = pd.DataFrame.from_dict(data)
+    # reset the index and melt the DataFrame
+    df = df.reset_index().melt(id_vars='index', var_name='p', value_name='Forest')
+    # rename the columns
+    df = df.rename(columns={'index': 'Simulation Number'})
+
+    # plot the line plot
+    plt.figure()
+    sns.set_style("ticks")
+    sns.lineplot(data=df, x='p', y='Forest',
+                 color='tomato', markers=True, dashes=False)
+    plt.xlabel('p')
+    plt.ylabel('Final forest density / initial forest density')
+    if savefig:
+        plt.savefig(f'Plots/forestdecrease_{filename}.png', dpi=400)
+    plt.show()

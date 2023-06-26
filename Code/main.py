@@ -11,15 +11,15 @@ import argparse
 import numpy as np
 import time
 from forest import Forest
-from experiments import experiment
+from experiments import density_experiment, forest_decrease_experiment
 import constants
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Forest Fire Model')
 
-    parser.add_argument('mode', nargs='?', choices=['test', 'crit_p'],
-                        help='Specify the mode to run (test, crit_p)')
+    parser.add_argument('mode', nargs='?', choices=['test', 'crit_p', 'burn_area'],
+                        help='Specify the mode to run (test, crit_p, burn_area)')
     # grid dimension input
     parser.add_argument('--dimension', type=int, required=False, help='dimension of the grid')
     # grid dimension input
@@ -98,11 +98,26 @@ if __name__ == "__main__":
         print(f"Duration:{time.time() - start_time}s")
     # lineplot run for determining critical density
     elif args.mode == 'crit_p':
-        step = 0.01
-        results = experiment(
-            densities=np.arange(0 + step, 1, step),
+        step = 0.05
+        results = density_experiment(
+            densities=np.arange(0 + step, 1 + step, step),
             n_experiments=10,
-            n_simulations=30,
+            n_simulations=20,
+            grid_type='default',
+            vegetation_grid=grid,
+            dimension=dimension,
+            burnup_time=burnup_t,
+            neighbourhood_type="moore",
+            visualize=False,
+            save_data=True,
+            make_plot=True
+        )
+    # lineplot run for determining final forest area / initial forest area
+    elif args.mode == 'burn_area':
+        step = 0.05
+        results = forest_decrease_experiment(
+            densities=np.arange(0 + step, 1 + step, step),
+            n_simulations=20,
             grid_type='default',
             vegetation_grid=grid,
             dimension=dimension,
