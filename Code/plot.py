@@ -6,12 +6,12 @@
 # Description: Contains plotting functions that go  
 # along the forest fire model.
 
+
 import numpy as np
 import pandas as pd
-from IPython.display import display
 import matplotlib.pyplot as plt
 import seaborn as sns
-from typing import Dict, List
+from typing import Dict
 
 
 def density_lineplot(data: Dict, filename: str, savefig: bool) -> None:

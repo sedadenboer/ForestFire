@@ -22,7 +22,7 @@ class Forest:
     VON_NEUMANN_NEIGHBOURS = ((-1, 0), (0, -1), (0, 1), (1, 0))
 
     def __init__(self, grid_type: str, dimension: int, density: float, burnup_time: int,
-                 neighbourhood_type: str, visualize: bool, vegetation_grid: List[List[int]] = None) -> None:
+                 neighbourhood_type: str, visualize: bool, vegetation_grid: np.ndarray = None) -> None:
         """Forest model of the region where forest fires occur. Represented by a 2D grid,
         containing "Plant" objects that represent generic trees in the basic version of the model.
         The cells can be empty, tree, fire, or burned. The state of the forest changes over time
@@ -36,7 +36,7 @@ class Forest:
             burnup_time (int): time for a tree to burn down
             neighbourhood_type (str): "moore" or "von_neumann"
             visualize (bool): if a visualization should be made
-            vegetation_grid (List(List(int))):  if grid_type = 'mixed', 2d matrix specifying the vegetation layout
+            vegetation_grid (np.darray):  if grid_type = 'mixed', 2d matrix specifying the vegetation layout
         """
         # parameters
         self.grid_type = grid_type
@@ -65,14 +65,14 @@ class Forest:
         if self.grid_type == 'default':
             # choose random spots in the grid to place trees, according to predefined density
             trees_number = round((self.dimension ** 2) * self.density)
-            tree_indices = np.random.choice(
+            self.tree_indices = np.random.choice(
                 range(self.dimension * self.dimension),
                 trees_number,
                 replace=False
             )
 
             # place trees on randomly chosen cells
-            for index in tree_indices:
+            for index in self.tree_indices:
                 row = index // self.dimension
                 col = index % self.dimension
                 grid[row][col] = Plant(constants.TREE)
@@ -91,14 +91,18 @@ class Forest:
             Plant: random Tree cell
         """
         # keep searching until randomly chosen cell is a Tree
-        while True:
-            row = np.random.randint(0, self.dimension)
-            col = np.random.randint(0, self.dimension)
-            plant = self.grid[row][col]
+        # while True:
+        #     row = np.random.randint(0, self.dimension)
+        #     col = np.random.randint(0, self.dimension)
+        #     plant = self.grid[row][col]
 
-            if plant.is_tree():
-                # if cell is a Tree, return the cell
-                return plant
+        #     if plant.is_tree():
+        #         # if cell is a Tree, return the cell
+        #         return plant
+        random_plant = np.random.choice(self.tree_indices)
+        row = random_plant // self.dimension
+        col = random_plant % self.dimension
+        return self.grid[row][col]
 
     def start_fire_randomly(self) -> None:
         """Initializes a cell of fire randomly somehwere."""
@@ -309,7 +313,11 @@ class Forest:
         time = 0
 
         # start fire
-        self.start_fire_randomly()
+        if len(self.tree_indices) > 0:
+            self.start_fire_randomly()
+        else:
+            print("No trees available for ignition.")
+            return 0
 
         # keep running until waiting time for ignition or until fires are extinguished
         while self.check_fire_forest():
