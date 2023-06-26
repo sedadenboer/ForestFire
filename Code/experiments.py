@@ -14,9 +14,9 @@ import json
 from plot import density_lineplot, forest_decrease_lineplot
 
 
-def density_experiment(densities: List[float], n_experiments: int, n_simulations: int,
-               grid_type: str, vegetation_grid: np.ndarray, dimension: int, burnup_time: int, neighbourhood_type: str,
-               visualize: bool, save_data: bool, make_plot: bool) -> Dict:
+def density_experiment(densities: np.ndarray, n_experiments: int, n_simulations: int,
+                       grid_type: str, veg_ratio: List[float], dimension: int, burnup_time: int, neighbourhood_type: str,
+                       visualize: bool, save_data: bool, make_plot: bool) -> Dict:
     """Runs n experiments for different values of p. For every experiment a simulation
     with the same settings is repeated m times, from which the percolation probability
     for that value of p is calculated. These probabilities are saved into a dictionary.
@@ -26,7 +26,7 @@ def density_experiment(densities: List[float], n_experiments: int, n_simulations
         n_experiments (int): number of experiments for each p value
         n_simulations (int): number of simulations to repeat for each experiment
         grid_type (str): the layout of vegetation ('default' or 'mixed')
-        vegetation_grid (np.darray):  if grid_type = 'mixed', 2d matrix specifying the vegetation layout
+        veg_ratio (List[float]): the ratio between different vegetation type
         dimension (int): dimension of the Forest grid
         burnup_time (int): burnup time for Trees
         neighbourhood_type (str): neighbourhood model ("moore" or "von_neumann")
@@ -48,12 +48,12 @@ def density_experiment(densities: List[float], n_experiments: int, n_simulations
             print("\nEXPERIMENT:", n, "\n")
 
             percolation_count = 0
-            
+
             # of a predefined range of simulations
             for _ in range(n_simulations):
                 model = Forest(
                     grid_type=grid_type,
-                    vegetation_grid=vegetation_grid,
+                    veg_ratio=veg_ratio,
                     dimension=dimension,
                     density=p,
                     burnup_time=burnup_time,
@@ -108,8 +108,8 @@ def get_critical_density(data: Dict) -> float:
             return key
     return None
 
-def forest_decrease_experiment(densities: List[float], n_simulations: int,
-                               grid_type: str, vegetation_grid: np.ndarray, dimension: int, burnup_time: int, neighbourhood_type: str,
+def forest_decrease_experiment(densities: np.ndarray, n_simulations: int,
+                               grid_type: str, veg_ratio: List[float], dimension: int, burnup_time: int, neighbourhood_type: str,
                                visualize: bool, save_data: bool, make_plot: bool) -> Dict:
     """Runs n experiments for different values of p. For every experiment a simulation
     with the same settings is repeated m times, from which the burned area/initial plant ratio
@@ -119,7 +119,7 @@ def forest_decrease_experiment(densities: List[float], n_simulations: int,
         densities (List[float]): density values (p) to experiment with
         n_simulations (int): number of simulations to repeat for each experiment
         grid_type (str): the layout of vegetation ('default' or 'mixed')
-        vegetation_grid (np.darray):  if grid_type = 'mixed', 2d matrix specifying the vegetation layout
+        veg_ratio (List[float]): the ratio between different vegetation type
         dimension (int): dimension of the Forest grid
         burnup_time (int): burnup time for Trees
         neighbourhood_type (str): neighbourhood model ("moore" or "von_neumann")
@@ -140,7 +140,7 @@ def forest_decrease_experiment(densities: List[float], n_simulations: int,
         for _ in range(n_simulations):
             model = Forest(
                 grid_type=grid_type,
-                vegetation_grid=vegetation_grid,
+                veg_ratio=veg_ratio,
                 dimension=dimension,
                 density=p,
                 burnup_time=burnup_time,

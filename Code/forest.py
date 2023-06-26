@@ -50,7 +50,6 @@ class Forest:
         self.density = density
         self.burnup_time = burnup_time
         self.veg_ratio = veg_ratio
-        self.tree_indices = []
         self.grid = self.make_grid()
         self.frames = [self.get_forest_state()]
         self.visualize = visualize
@@ -63,7 +62,7 @@ class Forest:
         """Initializes the forest with a given dimension and tree density.
 
         Returns:
-            List[List[Plant]]: forest grid
+            np.ndarray: forest grid
         """
         # make grid with "empty" Plant objects
         grid = np.full((self.dimension, self.dimension), Plant(constants.EMPTY), dtype=object)
@@ -72,14 +71,14 @@ class Forest:
         if self.grid_type == 'default':
             # choose random spots in the grid to place trees, according to predefined density
             trees_number = round((self.dimension ** 2) * self.density)
-            self.tree_indices = np.random.choice(
+            tree_indices = np.random.choice(
                 range(self.dimension * self.dimension),
                 trees_number,
                 replace=False
             )
 
             # place trees on randomly chosen cells
-            for index in self.tree_indices:
+            for index in tree_indices:
                 row = index // self.dimension
                 col = index % self.dimension
                 grid[row][col] = Plant(constants.TREE)
@@ -94,7 +93,6 @@ class Forest:
                 for i, split in enumerate(splits):
                     veg_grid[split] = np.random.choice([constants.EMPTY,plant_type[i+1]],
                                                     size=(len(split), self.dimension), p=[1-self.density,self.density])
-
             elif self.grid_type == 'vertical':
                 lengths = np.round(np.array(self.veg_ratio) * len(grid[:,0])).astype(int)
                 splits = np.split(np.arange(self.dimension), np.cumsum(lengths)[:-1])
@@ -105,7 +103,6 @@ class Forest:
                                                     size=(len(split), self.dimension), p=[1-self.density,self.density])
 
                 veg_grid = np.rot90(veg_grid)
-
             elif self.grid_type == 'random':
                 p_list = np.concatenate([np.array([1-self.density]), np.array(self.veg_ratio)*self.density])
                 veg_grid = np.random.choice(plant_type, size=(self.dimension, self.dimension), p=p_list)
@@ -117,22 +114,26 @@ class Forest:
 
         return grid
 
-    def get_random_tree(self) -> Plant:
+    def get_random_plant(self) -> Plant:
         """Get a random Tree.
 
         Returns:
             Plant: random Tree cell
         """
-        # choose random tree
-        random_plant = np.random.choice(self.tree_indices)
-        row = random_plant // self.dimension
-        col = random_plant % self.dimension
-        return self.grid[row][col]
+        # keep searching until randomly chosen cell is a Tree
+        while True:
+            row = np.random.randint(0, self.dimension)
+            col = np.random.randint(0, self.dimension)
+            plant = self.grid[row][col]
+
+            if plant.is_tree() or plant.is_shrub() or plant.is_grass():
+                # if cell is a Tree, return the cell
+                return plant
 
     def start_fire_randomly(self) -> None:
-        """Initializes a cell of fire randomly somehwere."""
-        tree = self.get_random_tree()
-        tree.change_state(constants.FIRE)
+        """Initializes a cell of fire randomly somewhwere."""
+        plant = self.get_random_plant()
+        plant.change_state(constants.FIRE)
 
     def start_fire(self) -> None:
         """Initializes a line of fire on top of the grid."""
@@ -166,10 +167,8 @@ class Forest:
             hor_neighbor = col + hor
 
             # check if the neighboring cell is within the grid bounds
-            if (
-                    vert_neighbor >= 0 and vert_neighbor < self.dimension and
-                    hor_neighbor >= 0 and hor_neighbor < self.dimension
-            ):
+            if (vert_neighbor >= 0 and vert_neighbor < self.dimension and
+                hor_neighbor >= 0 and hor_neighbor < self.dimension):
                 # increment the count of the total neighbors
                 neighbors += 1
 
@@ -199,7 +198,7 @@ class Forest:
             site_igni_p = self.grid[row, col].igni_probability()
             site_humidity_p = self.grid[row, col].humidity_effect()
 
-        # calculate probability of catching fire (with ignition p and humedity effect)
+        # calculate probability of catching fire (with ignition p and humidity effect)
         chance_fire = lit_neighbors_num / total_neighbors * site_igni_p * site_humidity_p
         return chance_fire
 
@@ -321,9 +320,6 @@ class Forest:
     def simulate(self) -> List[np.array]:
         """Simulate the forest fire spread and return the frames.
 
-        Args:
-            waiting_time (int): time to wait for a forest fire to develop
-
         Returns:
             List[np.array]: list of frames capturing the forest state during the simulation
         """
@@ -333,11 +329,7 @@ class Forest:
         time = 0
 
         # start fire
-        if len(self.tree_indices) > 0:
-            self.start_fire_randomly()
-        else:
-            print("No trees available for ignition.")
-            return 0
+        self.start_fire_randomly()
 
         # keep running until waiting time for ignition or until fires are extinguished
         while self.check_fire_forest():
