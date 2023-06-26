@@ -18,11 +18,17 @@ import constants
 
 class Forest:
     # cell states and neighbor indices (Moore neighborhood)
+    # EMPTY = 0
+    # TREE = 1
+    # GRASS = 2
+    # SHRUB = 3
+    # FIRE = 10
+    # BURNED = -1
     MOORE_NEIGHBOURS = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
     VON_NEUMANN_NEIGHBOURS = ((-1, 0), (0, -1), (0, 1), (1, 0))
 
-    def __init__(self, grid_type: str, dimension: int, density: float, burnup_time: int,
-                 neighbourhood_type: str, visualize: bool, vegetation_grid: np.ndarray = None) -> None:
+    def __init__(self, grid_type: str, dimension: int, density: float, burnup_time: int, veg_ratio: List[float],
+                 neighbourhood_type: str, visualize: bool) -> None:
         """Forest model of the region where forest fires occur. Represented by a 2D grid,
         containing "Plant" objects that represent generic trees in the basic version of the model.
         The cells can be empty, tree, fire, or burned. The state of the forest changes over time
@@ -30,20 +36,20 @@ class Forest:
         with its Moore neighborhood.
 
         Args:
-            grid_type (str): the layout of vegetation ('default' or 'mixed')
+            grid_type (str): the layout of vegetation ('default' or 'stripe' / 'vertical' / 'random')
             dimension (int): size of the grid
             density (float): forest density
             burnup_time (int): time for a tree to burn down
+            veg_ratio (List[float]): the ratio between different vegetation type
             neighbourhood_type (str): "moore" or "von_neumann"
             visualize (bool): if a visualization should be made
-            vegetation_grid (np.darray):  if grid_type = 'mixed', 2d matrix specifying the vegetation layout
         """
         # parameters
         self.grid_type = grid_type
-        self.veg_grid = np.array(vegetation_grid)
         self.dimension = dimension
         self.density = density
         self.burnup_time = burnup_time
+        self.veg_ratio = veg_ratio
         self.tree_indices = []
         self.grid = self.make_grid()
         self.frames = [self.get_forest_state()]
@@ -61,6 +67,7 @@ class Forest:
         """
         # make grid with "empty" Plant objects
         grid = np.full((self.dimension, self.dimension), Plant(constants.EMPTY), dtype=object)
+        plant_type = [constants.EMPTY, constants.TREE, constants.GRASS, constants.SHRUB]
 
         if self.grid_type == 'default':
             # choose random spots in the grid to place trees, according to predefined density
@@ -77,10 +84,36 @@ class Forest:
                 col = index % self.dimension
                 grid[row][col] = Plant(constants.TREE)
         else:
+            veg_grid = np.zeros((self.dimension,self.dimension))
+
+            if self.grid_type == 'stripe':
+                lengths = np.round(np.array(self.veg_ratio) * len(grid[:,0])).astype(int)
+                splits = np.split(np.arange(self.dimension), np.cumsum(lengths)[:-1])
+
+                # fill in the grid
+                for i, split in enumerate(splits):
+                    veg_grid[split] = np.random.choice([constants.EMPTY,plant_type[i+1]],
+                                                    size=(len(split), self.dimension), p=[1-self.density,self.density])
+
+            elif self.grid_type == 'vertical':
+                lengths = np.round(np.array(self.veg_ratio) * len(grid[:,0])).astype(int)
+                splits = np.split(np.arange(self.dimension), np.cumsum(lengths)[:-1])
+
+                # fill in the grid
+                for i, split in enumerate(splits):
+                    veg_grid[split] = np.random.choice([constants.EMPTY,plant_type[i+1]],
+                                                    size=(len(split), self.dimension), p=[1-self.density,self.density])
+
+                veg_grid = np.rot90(veg_grid)
+
+            elif self.grid_type == 'random':
+                p_list = np.concatenate([np.array([1-self.density]), np.array(self.veg_ratio)*self.density])
+                veg_grid = np.random.choice(plant_type, size=(self.dimension, self.dimension), p=p_list)
+
             # place plants according to the grid vegetation layout
-            for i in range(self.veg_grid.shape[0]):
-                for j in range(self.veg_grid.shape[1]):
-                    grid[i][j] = Plant(self.veg_grid[i][j])
+            for i in range(veg_grid.shape[0]):
+                for j in range(veg_grid.shape[1]):
+                    grid[i][j] = Plant(veg_grid[i][j])
 
         return grid
 
@@ -223,7 +256,7 @@ class Forest:
             if cell.is_burning() or cell.is_burned():
                 return True
         return False
-    
+
     def check_percolation(self) -> bool:
         """Checks if fire has reached all edges of the grid.
 
@@ -241,7 +274,7 @@ class Forest:
         # count the number of edges that contain(ed) fire
         n_edges_fire = sum([1 for lst in [fire_top, fire_bot, fire_left, fire_right] if len(lst) > 0])
         return n_edges_fire == 4
-    
+
     def forest_decrease(self) -> float:
         """Calculates the percentage difference in trees between the first and last frame.
 
@@ -254,7 +287,7 @@ class Forest:
         flux = (final_trees / initial_trees)
 
         return flux
-    
+
     def update_forest_state(self) -> None:
         """Updates the state of the forest based on forest fire spread rules.
         """
@@ -265,7 +298,7 @@ class Forest:
                 # skip empty cells
                 if plant.is_empty() or plant.is_burned():
                     continue
-                
+
                 # if the cell is burning and the burning counter reaches burnup time, change to burned state
                 if plant.is_burning():
                     if plant.burning_time == self.burnup_time:
@@ -292,7 +325,7 @@ class Forest:
             waiting_time (int): time to wait for a forest fire to develop
 
         Returns:
-            List[List[int]]: list of frames capturing the forest state during the simulation
+            List[np.array]: list of frames capturing the forest state during the simulation
         """
         # # message to user
         # print("Running simulation...")

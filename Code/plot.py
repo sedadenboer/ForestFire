@@ -6,7 +6,6 @@
 # Description: Contains plotting functions that go  
 # along the forest fire model.
 
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -21,9 +20,9 @@ def density_lineplot(data: Dict, filename: str, savefig: bool) -> None:
 
     Args:
         data (Dict): percolation data of experiment
-        filename (str): experiment specific filename
         savefig (bool): True if figure should be saved, otherwise False
     """
+
     # create a DataFrame from the dictionary
     df = pd.DataFrame.from_dict(data)
     # reset the index and melt the DataFrame
