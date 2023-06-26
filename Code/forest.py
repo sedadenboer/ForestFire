@@ -16,15 +16,8 @@ from visualize import visualize
 from typing import List, Tuple
 import constants
 
-
 class Forest:
     # cell states and neighbor indices (Moore neighborhood)
-    # EMPTY = 0
-    # TREE = 1
-    # GRASS = 2
-    # SHRUB = 3
-    # FIRE = 10
-    # BURNED = -1
     MOORE_NEIGHBOURS = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
     VON_NEUMANN_NEIGHBOURS = ((-1, 0), (0, -1), (0, 1), (1, 0))
 
@@ -51,6 +44,7 @@ class Forest:
         self.dimension = dimension
         self.density = density
         self.burnup_time = burnup_time
+        self.tree_indices = []
         self.grid = self.make_grid()
         self.frames = [self.get_forest_state()]
         self.visualize = visualize
@@ -59,19 +53,14 @@ class Forest:
         else:
             self.neighbourhood = Forest.VON_NEUMANN_NEIGHBOURS
 
-    def make_grid(self) -> List[List[Plant]]:
+    def make_grid(self) -> np.ndarray:
         """Initializes the forest with a given dimension and tree density.
 
         Returns:
             List[List[Plant]]: forest grid
         """
-        # initialize empty grid
-        grid = np.empty(shape=(self.dimension, self.dimension), dtype=object)
-
-        # fill grid with "empty" Plant objects
-        for i in range(self.dimension):
-            for j in range(self.dimension):
-                grid[i][j] = Plant(constants.EMPTY)
+        # make grid with "empty" Plant objects
+        grid = np.full((self.dimension, self.dimension), Plant(constants.EMPTY), dtype=object)
 
         if self.grid_type == 'default':
             # choose random spots in the grid to place trees, according to predefined density
@@ -87,7 +76,6 @@ class Forest:
                 row = index // self.dimension
                 col = index % self.dimension
                 grid[row][col] = Plant(constants.TREE)
-
         else:
             # place plants according to the grid vegetation layout
             for i in range(self.veg_grid.shape[0]):
@@ -111,8 +99,6 @@ class Forest:
             if plant.is_tree():
                 # if cell is a Tree, return the cell
                 return plant
-        
-        return None
 
     def start_fire_randomly(self) -> None:
         """Initializes a cell of fire randomly somehwere."""
@@ -176,8 +162,7 @@ class Forest:
             float: probability of the cell catching fire
         """
         # get count of total neighbors and lit neighbors
-        total_neighbors = self.get_lit_neighbors(row, col)[0]
-        lit_neighbors_num = self.get_lit_neighbors(row, col)[1]
+        total_neighbors, lit_neighbors_num = self.get_lit_neighbors(row, col)
 
         if self.grid_type == 'default':
             site_igni_p, site_humidity_p = 1, 1
@@ -205,6 +190,76 @@ class Forest:
             return True
         return False
 
+    def get_forest_state(self) -> np.ndarray:
+        """Extracts states from Plant objects and returns them in a 2D list.
+        This is to have an integer representation of the grid.
+
+        Returns:
+            List[List[int]]: 2D list of all Plant states
+        """
+        # extract states from Plant objects
+        return np.array([[plant.state for plant in row] for row in self.grid])
+
+    def get_edge_cells(self) -> Tuple[np.array, np.array, np.array, np.array]:
+        """Retrieve edge cells of the grid.
+
+        Returns:
+            Tuple[np.array, np.array, np.array, np.array]: arrays of edge cells
+        """
+        top_edge = self.grid[0, :]
+        bottom_edge = self.grid[-1, :]
+        left_edge = self.grid[1:-1, 0]
+        right_edge = self.grid[1:-1, -1]
+
+        return [top_edge, bottom_edge, left_edge, right_edge]
+
+    def check_percolation_bottom(self) -> bool:
+        """Checks if the bottom row of self.grid contains any FIRE or BURNED cells.
+
+        Returns:
+            bool: True if the bottom row contains FIRE or BURNED cells, False otherwise.
+        """
+        # get cells on the bottom row of the grid
+        bottom_row = self.grid[-1]
+
+        for cell in bottom_row:
+            # check if a cell is on fire or has been burned
+            if cell.is_burning() or cell.is_burned():
+                return True
+        return False
+    
+    def check_percolation(self) -> bool:
+        """Checks if fire has reached all edges of the grid.
+
+        Returns:
+            bool: True if edges contain FIRE or BURNED cells, False otherwise
+        """
+        top, bot, left, right = self.get_edge_cells()
+
+        # check for fire/burned plants in edges
+        fire_top = [tree for tree in top if tree.is_burned() or tree.is_burning()]
+        fire_bot = [tree for tree in bot if tree.is_burned() or tree.is_burning()]
+        fire_left = [tree for tree in left if tree.is_burned() or tree.is_burning()]
+        fire_right = [tree for tree in right if tree.is_burned() or tree.is_burning()]
+
+        # count the number of edges that contain(ed) fire
+        n_edges_fire = sum([1 for lst in [fire_top, fire_bot, fire_left, fire_right] if len(lst) > 0])
+        return n_edges_fire == 4
+    
+    def forest_decrease(self) -> float:
+        """Calculates the percentage difference in trees between the first and last frame.
+
+        Returns:
+            float: percentage tree decrease
+        """
+
+        initial_trees = np.count_nonzero(self.frames[0] == 1)
+        final_trees = np.count_nonzero(self.frames[-1] == 1)
+
+        self.flux = (initial_trees - final_trees) / initial_trees * 100
+
+        return self.flux
+    
     def update_forest_state(self) -> None:
         """Updates the state of the forest based on forest fire spread rules.
         """
@@ -213,9 +268,9 @@ class Forest:
         for row_idx, row in enumerate(self.grid):
             for col_idx, plant in enumerate(row):
                 # skip empty cells
-                if plant.is_empty():
+                if plant.is_empty() or plant.is_burned():
                     continue
-
+                
                 # if the cell is burning and the burning counter reaches burnup time, change to burned state
                 if plant.is_burning():
                     if plant.burning_time == self.burnup_time:
@@ -239,33 +294,7 @@ class Forest:
             row_idx, col_idx = cell
             self.grid[row_idx][col_idx].change_state(constants.FIRE)
 
-    def get_forest_state(self) -> List[List[int]]:
-        """Extracts states from Plant objects and returns them in a 2D list.
-        This is to have an integer representation of the grid.
-
-        Returns:
-            List[List[int]]: 2D list of all Plant states
-        """
-        # extract states from Plant objects
-        return np.array([[plant.state for plant in row] for row in self.grid])
-
-    def check_percolation(self) -> bool:
-        """Checks if the bottom row of self.grid contains any FIRE or BURNED cells.
-
-        Returns:
-            bool: True if the bottom row contains FIRE or BURNED cells, False otherwise.
-        """
-        # get cells on the bottom row of the grid
-        bottom_row = self.grid[-1]
-
-        for cell in bottom_row:
-            # check if a cell is on fire or has been burned
-            if cell.is_burning() or cell.is_burned():
-                return True
-
-        return False
-
-    def simulate(self) -> List[List[int]]:
+    def simulate(self) -> List[np.array]:
         """Simulate the forest fire spread and return the frames.
 
         Args:

@@ -14,13 +14,14 @@ import seaborn as sns
 from typing import Dict, List
 
 
-def density_lineplot(data: Dict, savefig: bool) -> None:
+def density_lineplot(data: Dict, filename: str, savefig: bool) -> None:
     """Makes a lineplot of the percolation probability for different
     values of the forest density, with 95% confidence interval for
     n experiments and m simulations of the forest fire model.
 
     Args:
         data (Dict): percolation data of experiment
+        filename (str): experiment specific filename
         savefig (bool): True if figure should be saved, otherwise False
     """
 
@@ -39,5 +40,8 @@ def density_lineplot(data: Dict, savefig: bool) -> None:
     plt.xlabel('p')
     plt.ylabel('Probability of percolation')
     if savefig:
-        plt.savefig('Plots/density_lineplot.png', dpi=400)
+        plt.savefig(f'Plots/{filename}.png', dpi=400)
     plt.show()
+
+def forest_decrease_lineplot(data: Dict):
+    pass

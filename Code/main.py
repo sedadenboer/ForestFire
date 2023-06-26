@@ -9,6 +9,7 @@
 
 import argparse
 import numpy as np
+import time
 from forest import Forest
 from typing import List, Dict
 import json
@@ -17,8 +18,8 @@ import constants
 
 
 def experiment(densities: List[float], n_experiments: int, n_simulations: int,
-               default: bool, dimension: int, burnup_time: int, neighbourhood_type: str,
-               visualize: bool, save_data: bool) -> Dict:
+               grid_type: str, dimension: int, burnup_time: int, neighbourhood_type: str,
+               visualize: bool, save_data: bool, make_plot: bool) -> Dict:
     """Runs n experiments for different values of p. For every experiment a simulation
     with the same settings is repeated m times, from which the percolation proability
     for that value of p is calculated. These probabilities are saved into a dictionary.
@@ -27,12 +28,13 @@ def experiment(densities: List[float], n_experiments: int, n_simulations: int,
         densities (List[float]): density values (p) to experiment with
         n_experiments (int): number of experiments for each p value
         n_simulations (int): number of simulations to repeat for each experiment
-        default (bool): default spreading setting
+        grid_type (str): the layout of vegetation ('default' or 'mixed')
         dimension (int): dimension of the Forest grid
         burnup_time (int): burnup time for Trees
         neighbourhood_type (str): neighbourhood model ("moore" or "von_neumann")
-        visualize (bool): whether to visualize the Forest model.
-        save_data (bool): whether to save the percolation data.
+        visualize (bool): whether to visualize the Forest model
+        save_data (bool): whether to save the percolation data
+        make_plot (bool): whether to make a lineplot
 
     Returns:
         Dict: Dictionary with percolation probabilities for different p values
@@ -48,18 +50,19 @@ def experiment(densities: List[float], n_experiments: int, n_simulations: int,
             print("\nEXPERIMENT:", n, "\n")
 
             percolation_count = 0
-
-            # of a predefined range of simualtions
-            for _ in range(n_simulations):
-                model = Forest(
-                    default=default,
+            model = Forest(
+                    grid_type=grid_type,
+                    vegetation_grid=grid,
                     dimension=dimension,
                     density=p,
                     burnup_time=burnup_time,
                     neighbourhood_type=neighbourhood_type,
                     visualize=visualize
                 )
-
+            
+            # of a predefined range of simulations
+            for _ in range(n_simulations):
+            
                 # run simulation
                 model.simulate()
 
@@ -78,14 +81,34 @@ def experiment(densities: List[float], n_experiments: int, n_simulations: int,
             else:
                 percolation_info[p] = [percolation_chance]
 
-    print(percolation_info)
+    crit_density = get_critical_density(percolation_info)
     print()
+    print(percolation_info)
+    print('critical density:', crit_density)
 
+    filename = f'density_nexp={n_experiments}_nsim={n_simulations}_grtype={grid_type}_d={dimension}_btime={burnup_t}_nbh={neighbourhood_type}_critd={crit_density}'
     if save_data:
-        with open('Output/percolation_data.json', 'w') as fp:
+        with open(f'Output/{filename}.json', 'w') as fp:
             json.dump(percolation_info, fp)
+    if make_plot:
+        density_lineplot(percolation_info, filename, savefig=True)
 
     return percolation_info
+
+def get_critical_density(data: Dict) -> float:
+    """Calculates the average of lists in a dictionary and returns the key for which the average first surpasses 0.5.
+
+    Args:
+        dictionary (Dict): Dictionary with lists of values
+
+    Returns:
+        float: density for which the average first surpasses 0.5, or None if no such key exists.
+    """
+    for key, values in data.items():
+        average = np.mean(values)
+        if average > 0.5:
+            return key
+    return None
 
 
 if __name__ == "__main__":
@@ -148,7 +171,7 @@ if __name__ == "__main__":
             p_list = np.concatenate([np.array([1-density]), np.array(veg_ratio)*density])
             grid = np.random.choice(plant_type, size=(dimension, dimension), p=p_list)
     except:
-        print("Must specify vegetaion ratio if you want to enable vegetation grid!!!")
+        print("Must specify vegetation ratio if you want to enable vegetation grid!!!")
         
 
     # if no argument provided
@@ -157,30 +180,31 @@ if __name__ == "__main__":
     # default test run
     elif args.mode == 'test':
         model = Forest(
-            grid_type='mixed',
+            grid_type='default',
             vegetation_grid=grid,
             dimension=dimension,
             density=density,
             burnup_time=burnup_t,
             neighbourhood_type="moore",
-            visualize=True
+            visualize=False
         )
         
+        start_time = time.time()
         model.simulate()
+        print(f"Duration:{time.time() - start_time} s")
+
     # lineplot run for determining critical density
     elif args.mode == 'crit_p':
-        step = 0.01
+        step = 0.05
         results = experiment(
-            densities=np.arange(0, 1 + step, step),
-            n_experiments=5,
-            n_simulations=10,
-            default=True,
-            dimension=50,
+            densities=np.arange(0 + step, 1 + step, step),
+            n_experiments=10,
+            n_simulations=30,
+            grid_type='default',
+            dimension=dimension,
             burnup_time=burnup_t,
             neighbourhood_type="moore",
             visualize=False,
-            save_data=True
+            save_data=True,
+            make_plot=True
         )
-
-        # Make a density lineplot
-        density_lineplot(results, savefig=True)
