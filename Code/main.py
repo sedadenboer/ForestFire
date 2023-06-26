@@ -13,13 +13,12 @@ from forest import Forest
 from typing import List, Dict
 import json
 from plot import density_lineplot
-import constants
 
 import multiprocessing as mp
 
-def experiment(densities: float, n_experiments: int, n_simulations: int, veg_ratio: List[float],
+def experiment(density: float, n_experiments: int, n_simulations: int, veg_ratio: List[float],
                grid_type: str, dimension: int, burnup_time: int, neighbourhood_type: str,
-               visualize: bool, save_data: bool) -> None:
+               visualize: bool) -> None:
     """Runs n experiments for different values of p. For every experiment a simulation
     with the same settings is repeated m times, from which the percolation proability
     for that value of p is calculated. These probabilities are saved into a dictionary.
@@ -34,63 +33,50 @@ def experiment(densities: float, n_experiments: int, n_simulations: int, veg_rat
         burnup_time (int): burnup time for Trees
         neighbourhood_type (str): neighbourhood model ("moore" or "von_neumann")
         visualize (bool): whether to visualize the Forest model.
-        save_data (bool): whether to save the percolation data.
 
     Returns:
         Dict: Dictionary with percolation probabilities for different p values
     """
-    
-    percolation_info = {}
 
     # for each density value
-    for p in densities:
-        print(f"\n------ DENSITY={p} ------\n")
 
-        # perform n experiments
-        for n in range(n_experiments):
-            print("\nEXPERIMENT:", n, "\n")
+    print(f"\n------ DENSITY={density} ------\n")
+    results = []
+
+    # perform n experiments
+    for n in range(n_experiments):
+        print("\nEXPERIMENT:", n, "\n")
+        
+        percolation_count = 0
+
+        # of a predefined range of simualtions
+        for _ in range(n_simulations):
             
-            percolation_count = 0
+            model = Forest(
+                grid_type=grid_type,
+                dimension=dimension,
+                density=density,
+                burnup_time=burnup_time,
+                veg_ratio=veg_ratio,
+                neighbourhood_type=neighbourhood_type,
+                visualize=visualize
+            )
 
-            # of a predefined range of simualtions
-            for _ in range(n_simulations):
+            # run simulation
+            model.simulate()
+
+            # check if percolation occured
+            if model.check_percolation():
+                percolation_count += 1
                 
-                model = Forest(
-                    grid_type=grid_type,
-                    dimension=dimension,
-                    density=p,
-                    burnup_time=burnup_time,
-                    veg_ratio=veg_ratio,
-                    neighbourhood_type=neighbourhood_type,
-                    visualize=visualize
-                )
-
-                # run simulation
-                model.simulate()
-
-                # check if percolation occured
-                if model.check_percolation():
-                    percolation_count += 1
-                    
-            # retrieve percolation probability over the n simulations
-            percolation_chance = percolation_count / n_simulations
-            print(f"percolation count: {percolation_count}, n simulations: {n_simulations}")
-            print("chance:", percolation_chance)
-            
-            # save percolation probabilities per experiment in a dictionary
-            if p in percolation_info:
-                percolation_info[p].append(percolation_chance)
-            else:
-                percolation_info[p] = [percolation_chance]
-            
-    print(percolation_info)
-    print()    
+        # retrieve percolation probability over the n simulations
+        percolation_chance = percolation_count / n_simulations
+        print(f"percolation count: {percolation_count}, n simulations: {n_simulations}")
+        print("chance:", percolation_chance)
+        
+        results.append(percolation_chance)
     
-    if save_data:
-        with open('Output/percolation_data_veg_bt.json', 'w') as fp:
-            json.dump(percolation_info, fp)
-    
-    return percolation_info
+    return results
 
 
 if __name__ == "__main__":
@@ -110,6 +96,8 @@ if __name__ == "__main__":
     # vegetation grid type input
     parser.add_argument('grid_type', nargs='?', choices=['default', 'stripe', 'vertical', 'random'],
                         help='Specify the mode to run (test, crit_p)')
+    # number of processors for simulation
+    parser.add_argument('--np', type=int, required=False, help='fire burnup time')
 
     args = parser.parse_args()
     
@@ -132,6 +120,11 @@ if __name__ == "__main__":
         veg_ratio = args.veg_ratio
     else:
         veg_ratio = []
+    # parallel setting
+    if args.np is not None:
+        n_proc = args.np
+    else:
+        n_proc = 1
         
     
 
@@ -156,34 +149,46 @@ if __name__ == "__main__":
         step = 0.05
         densities = np.arange(0, 1 + step, step)
         
-        # serial
-        results = experiment(
-                densities=densities,
-                n_experiments=5,
-                n_simulations=10,
-                grid_type='mixed',
-                dimension=dimension,
-                burnup_time=burnup_t,
-                neighbourhood_type="moore",
-                visualize=False,
-                save_data=True
-            )
+        # # serial
+        # results = []
+        # for density in densities:
+        #     result = experiment(
+        #             density=density,
+        #             n_experiments=5,
+        #             n_simulations=10,
+        #             veg_ratio=veg_ratio,
+        #             grid_type=args.grid_type,
+        #             dimension=dimension,
+        #             burnup_time=burnup_t,
+        #             neighbourhood_type="moore",
+        #             visualize=False
+        #         )
             
-        # # parallel
-        # pool = mp.Pool()
-        # percolation_info = {}
-        # import functools
-        # results = pool.map(functools.partial(experiment,
-        #                         n_experiments=5,
-        #                         n_simulations=5,
-        #                         grid=grid,
-        #                         grid_type='mixed',
-        #                         dimension=dimension,
-        #                         burnup_time=burnup_t,
-        #                         neighbourhood_type="moore",
-        #                         visualize=False,
-        #                         save_data=True), densities)
+        #     results.append(result)
+            
+        # parallel
+        pool = mp.Pool(n_proc)
+        import functools
+        results = pool.map(functools.partial(experiment,
+                                n_experiments=5,
+                                n_simulations=10,
+                                veg_ratio=veg_ratio,
+                                grid_type=args.grid_type,
+                                dimension=dimension,
+                                burnup_time=burnup_t,
+                                neighbourhood_type="moore",
+                                visualize=False), densities)
         
-
+        pool.close()
+        
+        keys = densities
+        results_dict = dict(zip(densities,results))
+        
+        print(results_dict)
+        
+        if True:
+            with open('Output/percolation_data_veg_bt.json', 'w') as fp:
+                json.dump(results_dict, fp)
+            
         # Make a density lineplot
-        density_lineplot(results, savefig=True)
+        density_lineplot(results_dict, savefig=True)
