@@ -10,7 +10,7 @@
 import argparse
 import numpy as np
 from forest import Forest
-from experiments import density_experiment, forest_decrease_experiment
+from experiments import density_experiment, forest_decrease_experiment, wind_factor_experiment
 
 
 if __name__ == "__main__":
@@ -27,11 +27,24 @@ if __name__ == "__main__":
     # vegetation ratio input
     parser.add_argument('--veg_ratio', type=float, required=False, nargs=3, action='store',
                         help='The ratio of vegetation in the grid, format: [tree] [grass] [shrub]')
+    
+    # don't know if I added it correctly.
+    # parser.add_argument('--wind_direction',type =str,required=False, nargs=4, action='store',
+    #                     help='The direction of the wind in the model, format : [N],[E],[S],[W]')
     # vegetation grid type input
     parser.add_argument('grid_type', nargs='?', choices=['default', 'stripe', 'block', 'random'],
                         help='Specify the mode to run (test, crit_p, burn_area)')
+    
     # number of processors for simulation
     parser.add_argument('--np', type=int, required=False, help='fire burnup time')
+    parser.add_argument('--use_wind', action='store_true', 
+                    help='Use wind in the model')
+
+    parser.add_argument('--wind_direction', type=str, choices=['N', 'E', 'S', 'W'], 
+                        help='The direction of the wind in the model')
+
+    parser.add_argument('--wind_factor', type=float,
+                        help='The factor of the wind in the model')
 
     args = parser.parse_args()
     
@@ -60,9 +73,25 @@ if __name__ == "__main__":
     else:
         n_proc = 1
 
+     # default test run
+    if args.use_wind:
+
+        if args.wind_direction and args.wind_factor:
+            # Use wind in the model with provided direction and factor
+            wind_direction = args.wind_direction
+            wind_factor = args.wind_factor
+        else:
+            print("If '--use_wind' is specified, both '--wind_direction' and '--wind_factor' must be provided.")
+            exit(1)
+    else:
+        wind_direction = None
+        wind_factor = None
+
     # if no argument provided
     if not args.mode:
         parser.print_help()
+   
+
     # default test run
     elif args.mode == 'test':
         model = Forest(
@@ -72,10 +101,13 @@ if __name__ == "__main__":
             burnup_time=burnup_t,
             veg_ratio=veg_ratio,
             neighbourhood_type="moore",
-            visualize=True
+            visualize=True,
+            wind_direction=wind_direction,
+            wind_factor=wind_factor,
         )
-        
+
         model.simulate()
+
     # lineplot run for determining critical density
     elif args.mode == 'crit_p':
         step = 0.05
@@ -90,8 +122,11 @@ if __name__ == "__main__":
             neighbourhood_type="moore",
             visualize=False,
             save_data=True,
-            make_plot=True
+            make_plot=True,
+            wind_direction=wind_direction,
+            wind_factor=wind_factor,
         )
+
     # lineplot run for determining final forest area / initial forest area
     elif args.mode == 'burn_area':
         step = 0.05
@@ -106,5 +141,26 @@ if __name__ == "__main__":
             neighbourhood_type="moore",
             visualize=False,
             save_data=True,
-            make_plot=True
+            make_plot=True,
+            wind_direction=wind_direction,
+            wind_factor=wind_factor,
+        )
+
+        # lineplot run for determining percolation probability with different wind factors
+    elif args.mode == 'wind_factor':
+        wind_factors = np.arange(0.1, 0.2, 0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)  # example: wind factors from 0.1 to 1.0 with step 0.1
+        results = wind_factor_experiment(
+            wind_factors=wind_factors,
+            n_experiments=10,
+            n_simulations=20,
+            veg_ratio=veg_ratio,
+            grid_type=args.grid_type,
+            dimension=dimension,
+            burnup_time=burnup_t,
+            neighbourhood_type="moore",
+            visualize=False,
+            save_data=True,
+            make_plot=True,
+            wind_direction=wind_direction,
+            # note that wind_factor is not included here, it's taken care of by wind_factors
         )
