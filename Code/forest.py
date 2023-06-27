@@ -118,20 +118,80 @@ class Forest:
     
 
 
+    def sigmoid(self,x):
+        return 1 / (1 + np.exp(-x))
+
+    # def update_probabilities_fire(self, burning_cells):
+    #     if not hasattr(self, 'prob_grid'):
+    #         self.prob_grid = np.zeros_like(self.grid, dtype=float)
+
+    #     wind_influence_range = 2
+
+    #     # Reset the prob_grid to zero at the start of each iteration
+    #     self.prob_grid = np.zeros_like(self.grid, dtype=float)
+
+    #     for cell in burning_cells:
+    #         x, y = cell
+
+    #         # To avoid unnecessary computation, let's calculate these values once per burning cell
+    #         site_igni_p = self.grid[y, x].igni_probability() if self.grid_type != 'default' else 1
+    #         site_humidity_p = self.grid[y, x].humidity_effect() if self.grid_type != 'default' else 1
+
+    #         if self.wind_factor is not None:
+    #             if self.wind_direction == 'N':
+    #                 for i in range(1, wind_influence_range + 1):
+    #                     if y - i >= 0:  
+    #                         total_neighbors, lit_neighbors_num = self.get_lit_neighbors(y-i, x)
+    #                         self.prob_grid[y - i, x] += self.sigmoid((self.wind_factor * site_igni_p * site_humidity_p * lit_neighbors_num) / i)
+
+    #             elif self.wind_direction == 'E':
+    #                 for i in range(1, wind_influence_range + 1):
+    #                     if x + i < self.grid.shape[1]:
+    #                         total_neighbors, lit_neighbors_num = self.get_lit_neighbors(y, x+i)
+    #                         self.prob_grid[y, x + i] += self.sigmoid((self.wind_factor * site_igni_p * site_humidity_p * lit_neighbors_num) / i)
+
+    #             elif self.wind_direction == 'S':
+    #                 for i in range(1, wind_influence_range + 1):
+    #                     if y + i < self.grid.shape[0]: 
+    #                         total_neighbors, lit_neighbors_num = self.get_lit_neighbors(y+i, x)
+    #                         self.prob_grid[y + i, x] += self.sigmoid((self.wind_factor * site_igni_p * site_humidity_p * lit_neighbors_num) / i)
+
+    #             elif self.wind_direction == 'W':
+    #                 for i in range(1, wind_influence_range + 1):
+    #                     if x - i >= 0:  
+    #                         total_neighbors, lit_neighbors_num = self.get_lit_neighbors(y, x-i)
+    #                         self.prob_grid[y, x - i] += self.sigmoid((self.wind_factor * site_igni_p * site_humidity_p * lit_neighbors_num) / i)
+
+    #             else:
+    #                 for delta_row in [-1, 0, 1]:
+    #                     for delta_col in [-1, 0, 1]:
+    #                         if 0 <= x + delta_row < self.grid.shape[0] and 0 <= y + delta_col < self.grid.shape[1]:
+    #                             total_neighbors, lit_neighbors_num = self.get_lit_neighbors(x + delta_row, y + delta_col)
+    #                             self.prob_grid[x + delta_row, y + delta_col] += self.sigmoid((site_igni_p * site_humidity_p * lit_neighbors_num) / total_neighbors)
+
+    #     self.prob_grid = np.clip(self.prob_grid, 0, 1)
+    #     print(self.prob_grid)
+
+
+
+
     def update_probabilities_fire(self, burning_cells):
         """
-    Updates the fire probabilities for each cell in the grid based on the presence of burning cells and the influence
-    of wind and humidity.
+        Updates the fire probabilities for each cell in the grid based on the presence of burning cells and the influence
+        of wind and humidity.
 
-    Args:
-        burning_cells (list): List of coordinates (row, column) of burning cells.
+        Args:
+            burning_cells (list): List of coordinates (row, column) of burning cells.
 
-    Returns:
-        None
-    """
-        
+        Returns:
+            None
+        """
+            
         if not hasattr(self, 'prob_grid'):
             self.prob_grid = np.zeros_like(self.grid, dtype=float)
+
+        # Wind influence range (how many cells away from the burning cell will be affected)
+        wind_influence_range = 2
 
         # Loop over all burning cells
         for cell in burning_cells:
@@ -141,73 +201,67 @@ class Forest:
             if self.wind_factor is not None:
                 
                 if self.wind_direction == 'N':
-                    if y > 0:
-                        total_neighbors, lit_neighbors_num = self.get_lit_neighbors(y-1, x)
-                        site_igni_p = self.prob_grid[y-1, x].igni_probability() if self.grid_type != 'default' else 1
-                        site_humidity_p = self.prob_grid[y-1, x].humidity_effect() if self.grid_type != 'default' else 1
-                        self.prob_grid[y-1, x] += (self.wind_factor * site_igni_p * site_humidity_p * lit_neighbors_num) / total_neighbors  # North cell
-                    if y > 1:
-                        total_neighbors, lit_neighbors_num = self.get_lit_neighbors(y-2, x)
-                        site_igni_p = self.prob_grid[y-2, x].igni_probability() if self.grid_type != 'default' else 1
-                        site_humidity_p = self.prob_grid[y-2, x].humidity_effect() if self.grid_type != 'default' else 1
-                        self.prob_grid[y-2, x] += (self.wind_factor / 2 * site_igni_p * site_humidity_p * lit_neighbors_num) / total_neighbors  # North cell 2nd row
-                    if y < self.prob_grid.shape[0] - 1:
-                        self.prob_grid[y+1, x] -= self.wind_factor  # South cell
-                        
+                    for i in range(1, wind_influence_range + 1):
+                        if y - i >= 0:  # Check if the cell is within the grid boundaries
+                            total_neighbors, lit_neighbors_num = self.get_lit_neighbors(y-i, x)
+                            site_igni_p = self.prob_grid[y-i, x].igni_probability() if self.grid_type != 'default' else 1
+                            site_humidity_p = self.prob_grid[y-i, x].humidity_effect() if self.grid_type != 'default' else 1
+                            self.prob_grid[y - i, x] = self.sigmoid((self.wind_factor * site_igni_p * site_humidity_p * lit_neighbors_num) / i)
+
                 elif self.wind_direction == 'E':
-                    if x < self.update_probabilities_firegrid.shape[1] - 1:
-                        total_neighbors, lit_neighbors_num = self.get_lit_neighbors(y, x+1)
-                        site_igni_p = self.prob_grid[y, x+1].igni_probability() if self.grid_type != 'default' else 1
-                        site_humidity_p = self.prob_grid[y, x+1].humidity_effect() if self.grid_type != 'default' else 1
-                        self.prob_grid[y, x+1] += (self.wind_factor * site_igni_p * site_humidity_p * lit_neighbors_num) / total_neighbors  # East cell
-                    if x > 0:
-                        self.prob_grid[y, x-1] -= self.wind_factor  # West cell
-                        
+                    for i in range(1, wind_influence_range + 1):
+                        if x + i < self.grid.shape[1]:  # Check if the cell is within the grid boundaries
+                            total_neighbors, lit_neighbors_num = self.get_lit_neighbors(y, x+i)
+                            site_igni_p = self.prob_grid[y, x+i].igni_probability() if self.grid_type != 'default' else 1
+                            site_humidity_p = self.prob_grid[y, x+i].humidity_effect() if self.grid_type != 'default' else 1
+                            self.prob_grid[y, x + i] = self.sigmoid((self.wind_factor * site_igni_p * site_humidity_p * lit_neighbors_num) / i)
+
                 elif self.wind_direction == 'S':
-                    if y < self.prob_grid.shape[0] - 1:
-                        total_neighbors, lit_neighbors_num = self.get_lit_neighbors(y+1, x)
-                        site_igni_p = self.prob_grid[y+1, x].igni_probability() if self.grid_type != 'default' else 1
-                        site_humidity_p = self.prob_grid[y+1, x].humidity_effect() if self.grid_type != 'default' else 1
-                        self.prob_grid[y+1, x] += (self.wind_factor * site_igni_p * site_humidity_p * lit_neighbors_num) / total_neighbors  # South cell
-                    if y > 0:
-                        self.prob_grid[y-1, x] -= self.wind_factor  # North cell
-                        
+                    for i in range(1, wind_influence_range + 1):
+                        if y + i < self.grid.shape[0]:  # Check if the cell is within the grid boundaries
+                            total_neighbors, lit_neighbors_num = self.get_lit_neighbors(y+i, x)
+                            site_igni_p = self.prob_grid[y+i, x].igni_probability() if self.grid_type != 'default' else 1
+                            site_humidity_p = self.prob_grid[y+i, x].humidity_effect() if self.grid_type != 'default' else 1
+                            self.prob_grid[y + i, x] = self.sigmoid((self.wind_factor * site_igni_p * site_humidity_p * lit_neighbors_num) / i)
+
                 elif self.wind_direction == 'W':
-                    if x > 0:
-                        total_neighbors, lit_neighbors_num = self.get_lit_neighbors(y, x-1)
-                        site_igni_p = self.prob_grid[y, x-1].igni_probability() if self.grid_type != 'default' else 1
-                        site_humidity_p = self.prob_grid[y, x-1].humidity_effect() if self.grid_type != 'default' else 1
-                        self.prob_grid[y, x-1] += (self.wind_factor * site_igni_p * site_humidity_p * lit_neighbors_num) / total_neighbors  # West cell
-                    if x < self.grid.shape[1] - 1:
-                        self.probgrid[y, x+1] -= self.wind_factor  # East cell
-                
-               
+                    for i in range(1, wind_influence_range + 1):
+                        if x - i >= 0:  # Check if the cell is within the grid boundaries
+                            total_neighbors, lit_neighbors_num = self.get_lit_neighbors(y, x-i)
+                            site_igni_p = self.prob_grid[y, x-i].igni_probability() if self.grid_type != 'default' else 1
+                            site_humidity_p = self.prob_grid[y, x-i].humidity_effect() if self.grid_type != 'default' else 1
+                            self.prob_grid[y, x - i] = self.sigmoid((self.wind_factor * site_igni_p * site_humidity_p * lit_neighbors_num) / i)
 
-            else:
-                # Loop over all neighboring cells
-                for delta_row in [-1, 0, 1]:
-                    for delta_col in [-1, 0, 1]:
 
-                        # Check if the cell is within the grid boundaries
-                        if not (0 <= x + delta_row < self.grid.shape[0] and 0 <= y + delta_col < self.grid.shape[1]):
-                            continue
+                else:
+                    # Loop over all neighboring cells
+                    for delta_row in [-1, 0, 1]:
+                        for delta_col in [-1, 0, 1]:
+                            # Check if the cell is within the grid boundaries
+                            if 0 <= x + delta_row < self.grid.shape[0] and 0 <= y + delta_col < self.grid.shape[1]:
 
-                        # Get the number of total neighbors and lit neighbors for the current cell
-                        total_neighbors, lit_neighbors_num = self.get_lit_neighbors(x + delta_row, y + delta_col)
-                        
-                        # Determine ignition and humidity probabilities based on the type of grid
-                        if self.grid_type != 'default':
-                            site_ignition_probability = self.grid[x + delta_row, y + delta_col].igni_probability()
-                            site_humidity_probability = self.grid[x + delta_row, y + delta_col].humidity_effect()
-                        else:
-                            site_ignition_probability = 1
-                            site_humidity_probability = 1
-                        
-                        # Update the cell's fire probability in the probability grid
-                        self.prob_grid[x + delta_row, y + delta_col] += (site_ignition_probability * site_humidity_probability * lit_neighbors_num) / total_neighbors
+                                # Get the number of total neighbors and lit neighbors for the current cell
+                                total_neighbors, lit_neighbors_num = self.get_lit_neighbors(x + delta_row, y + delta_col)
+                                
+                                # Determine ignition and humidity probabilities based on the type of grid
+                                if self.grid_type != 'default':
+                                    site_igni_p = self.grid[x + delta_row, y + delta_col].igni_probability()
+                                    site_humidity_p = self.grid[x + delta_row, y + delta_col].humidity_effect()
+                                else:
+                                    site_igni_p = 1
+                                    site_humidity_p = 1
 
-        # Ensure that all probabilities stay within the range [0, 1]
-        self.prob_grid = np.clip(self.prob_grid, 0, 1)
+                                # Update the cell's fire probability in the probability grid
+                                self.prob_grid[x + delta_row, y + delta_col] = self.sigmoid((site_igni_p * site_humidity_p * lit_neighbors_num) / total_neighbors)
+
+            # Ensure that all probabilities stay within the range [0, 1]
+            self.prob_grid = np.clip(self.prob_grid, 0, 1)
+            print(self.prob_grid)
+            # print(self.prob_grid)
+            # for i in self.prob_grid:
+            #     print(i)
+            print(self.grid)
+        
 
     def get_random_plant(self) -> Plant:
         """Get a random Tree.
@@ -403,11 +457,14 @@ class Forest:
                         plant.burning_time += 1
                     burning_cells.append((row_idx, col_idx))
 
-                # if the cell is a tree and has a burning neighbor, compute the fire chance
+                # if the cell is a tree, grass, or shrub and has a burning neighbor, compute the fire chance
                 # to decide if adding it to the list
                 elif plant.is_tree() or plant.is_grass() or plant.is_shrub():
                     self.update_probabilities_fire([(row_idx, col_idx)])
-                    if self.grid[row_idx][col_idx].state == constants.FIRE:
+
+                    # Check against random probability whether this cell will catch fire
+                    probability_to_burn = self.prob_grid[row_idx][col_idx]
+                    if np.random.rand() < probability_to_burn:
                         cells_to_set_on_fire.append((row_idx, col_idx))
 
         # set the tree cells on fire after iterating over all cells
@@ -417,6 +474,7 @@ class Forest:
 
         # Update the probabilities based on wind factor and direction
         self.update_probabilities_fire(burning_cells)
+
 
     def simulate(self) -> List[np.array]:
         """Simulate the forest fire spread and return the frames.
