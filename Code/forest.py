@@ -86,25 +86,25 @@ class Forest:
             veg_grid = np.zeros((self.dimension,self.dimension))
 
             if self.grid_type == 'stripe':
-                lengths = np.round(np.array(self.veg_ratio) * len(grid[:,0])).astype(int)
+                lengths = np.round(np.array(self.veg_ratio) * len(grid[:, 0])).astype(int)
                 splits = np.split(np.arange(self.dimension), np.cumsum(lengths)[:-1])
 
                 # fill in the grid
                 for i, split in enumerate(splits):
                     veg_grid[split] = np.random.choice([constants.EMPTY,plant_type[i+1]],
-                                                    size=(len(split), self.dimension), p=[1-self.density,self.density])
+                                                    size=(len(split), self.dimension), p=[1-self.density, self.density])
             elif self.grid_type == 'vertical':
                 lengths = np.round(np.array(self.veg_ratio) * len(grid[:,0])).astype(int)
                 splits = np.split(np.arange(self.dimension), np.cumsum(lengths)[:-1])
 
                 # fill in the grid
                 for i, split in enumerate(splits):
-                    veg_grid[split] = np.random.choice([constants.EMPTY,plant_type[i+1]],
-                                                    size=(len(split), self.dimension), p=[1-self.density,self.density])
+                    veg_grid[split] = np.random.choice([constants.EMPTY, plant_type[i + 1]],
+                                                    size=(len(split), self.dimension), p=[1 - self.density, self.density])
 
                 veg_grid = np.rot90(veg_grid)
             elif self.grid_type == 'random':
-                p_list = np.concatenate([np.array([1-self.density]), np.array(self.veg_ratio)*self.density])
+                p_list = np.concatenate([np.array([1 - self.density]), np.array(self.veg_ratio) * self.density])
                 veg_grid = np.random.choice(plant_type, size=(self.dimension, self.dimension), p=p_list)
 
             # place plants according to the grid vegetation layout
@@ -167,8 +167,7 @@ class Forest:
             hor_neighbor = col + hor
 
             # check if the neighboring cell is within the grid bounds
-            if (vert_neighbor >= 0 and vert_neighbor < self.dimension and
-                hor_neighbor >= 0 and hor_neighbor < self.dimension):
+            if 0 <= vert_neighbor < self.dimension and 0 <= hor_neighbor < self.dimension:
                 # increment the count of the total neighbors
                 neighbors += 1
 
