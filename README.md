@@ -18,7 +18,7 @@ Our research question is formulated as follows: \
 
 ## Model implementation
 
-### Asumptions
+### Assumptions
 ### Default 
 ### Vegetation
 ### Wind
