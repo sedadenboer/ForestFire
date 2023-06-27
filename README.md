@@ -19,16 +19,37 @@ Our research question is formulated as follows: \
 ## Model implementation
 
 ### Asumptions
-
 ### Default 
 ### Vegetation
 ### Wind
 
-### Usage
-
 ## Results
 
 ## Conclusion
+
+## Structure of the repository
+* The program can be run with main.py.
+* Code filemap: The code filemap contains all of the scripts of the model, experiments and plots.
+* Output filemap: json files generated from the experiments will be saved here, as well as the animation GIFs.
+* Plots filemap: plots generated from experimenets will be saved here.
+
+```
+.
+├── Code    
+│     ├── Output
+│     └── Plots
+├── .gitignore
+├── main.py
+├── README.md
+└── requirements.txt
+```
+## Getting started
+### Prerequisites
+This program is fully written in [Python (3.11.0)](https://www.python.org/downloads/) and to run the code you will need some dependencies that can be installed with the following line of code:
+
+`pip install -r requirements.txt`
+
+### Testing
 
 ## Presentation link
 
