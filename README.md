@@ -15,7 +15,7 @@ Our research question is formulated as follows: \
 **How does the density and arrangement of different vegetation types affect percolation in a forest fire model?**
 
 ### Hypothesis
-Considering lightning as our only fire source, the percolation probability would depend on the connectivity between the different cell types, which depends on the vegetation type. Having a well mixed grid with a plant type that is more frequent in biomass and which has a lower ignition chance compared to the other plant type, will help reduce the wildfire spred.
+Considering lightning as our only fire source and without tree regrowth, the percolation probability depends on the connectivity between the different cell types, which depends on the vegetation type and ignition chances. Having a well mixed grid with a plant type that is more frequent in terms of biomass and which has a lower ignition chance compared to the other plant type, will help reduce the wildfire spred.
 
 ## Model implementation
 A grid is initialized with plant cells according to a pre-defined plant density. Of those plants cells, the ratio between type 1 and 2 is varied, as well as the ignition chance of one plant type. The effect of plant bio-mass ratios and ignition chance on the percolation probability is observed. After a randomly ignited cell the fire spreads according to pre-defined rules. A simulation is repeated 10 times per paramameter combination to account for the stochasticic nature of the system.
@@ -32,7 +32,6 @@ The default has a single plant type and fixed ignition chance. The lineplot of d
 Experiments with 2 or 3 vegetation types which represent trees and grass and shrubs in the case of 3 plant types
 2 types:
 the ratio of plant bio mass is varied from 50/50 to 100/0 on the x-axis while the ignition chance for one of the plant types is varied, keeping the other ignition chance fixed.
-
 
 ## Results
 
