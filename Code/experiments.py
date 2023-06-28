@@ -11,7 +11,7 @@ import numpy as np
 from forest import Forest
 from typing import List, Dict
 import json
-from plot import density_lineplot, forest_decrease_lineplot
+from plot import density_lineplot, forest_decrease_lineplot, beta_plot, dimension_plot
 
 
 def density_experiment(densities: np.ndarray, n_experiments: int, n_simulations: int,
@@ -89,7 +89,7 @@ def density_experiment(densities: np.ndarray, n_experiments: int, n_simulations:
         with open(f'Output/{filename}.json', 'w') as fp:
             json.dump(percolation_info, fp)
     if make_plot:
-        density_lineplot(percolation_info, filename, savefig=True)
+        density_lineplot(percolation_info, filename, savefig=False)
 
     return percolation_info
 
@@ -108,7 +108,7 @@ def get_critical_density(data: Dict) -> float:
             return key
     return None
 
-def forest_decrease_experiment(densities: np.ndarray, n_simulations: int,
+def forest_decrease_experiment(densities: np.ndarray, n_experiments: int, n_simulations: int,
                                grid_type: str, veg_ratio: List[float], dimension: int, burnup_time: int, neighbourhood_type: str,
                                visualize: bool, save_data: bool, make_plot: bool) -> Dict:
     """Runs n experiments for different values of p. For every experiment a simulation
@@ -162,16 +162,185 @@ def forest_decrease_experiment(densities: np.ndarray, n_simulations: int,
             else:
                 decrease_info[p] = [decrease]
 
-    crit_density = get_critical_density(decrease_info)
     print(f"\nN simulations:{n_simulations}")
     print(decrease_info)
-    print('critical density:', crit_density)
 
-    filename = f'forestdecrease_nsim={n_simulations}_grtype={grid_type}_d={dimension}_btime={burnup_time}_nbh={neighbourhood_type}_critd={crit_density}'
+    filename = f'forestdecrease_nsim={n_simulations}_grtype={grid_type}_d={dimension}_btime={burnup_time}_nbh={neighbourhood_type}'
     if save_data:
         with open(f'Output/{filename}.json', 'w') as fp:
             json.dump(decrease_info, fp)
     if make_plot:
-        forest_decrease_lineplot(decrease_info, filename, savefig=True)
+        forest_decrease_lineplot(decrease_info, filename, savefig=False)
 
     return decrease_info
+
+
+def beta_experiment(densities: np.ndarray, n_experiments: int, n_simulations: int,
+                       grid_type: str, veg_ratio: List[float], dimension: int, burnup_time: int, neighbourhood_type: str,
+                       visualize: bool, save_data: bool, make_plot: bool) -> Dict:
+    """Runs n experiments for different values of p. For every experiment a simulation
+    with the same settings is repeated m times, from which the percolation probability
+    for that value of p is calculated. These probabilities are saved into a dictionary.
+
+    Args:
+        densities (List[float]): density values (p) to experiment with
+        n_experiments (int): number of experiments for each p value
+        n_simulations (int): number of simulations to repeat for each experiment
+        grid_type (str): the layout of vegetation ('default' or 'mixed')
+        veg_ratio (List[float]): the ratio between different vegetation type
+        dimension (int): dimension of the Forest grid
+        burnup_time (int): burnup time for Trees
+        neighbourhood_type (str): neighbourhood model ("moore" or "von_neumann")
+        visualize (bool): whether to visualize the Forest model
+        save_data (bool): whether to save the percolation data
+        make_plot (bool): whether to make a lineplot
+
+    Returns:
+        Dict: Dictionary with percolation probabilities for different p values
+    """
+    beta_info = {}
+    step = 0.01
+    # for each density value
+    for p in densities:
+        p = round(p, 4)
+
+        print(f"\n------ DENSITY={p} ------\n")
+
+        # perform n experiments
+        for n in range(n_experiments):
+            print("\nEXPERIMENT:", n, "\n")
+
+            percolation_count = 0
+
+            # of a predefined range of simulations
+            for _ in range(n_simulations):
+                model = Forest(
+                    grid_type=grid_type,
+                    veg_ratio=veg_ratio,
+                    dimension=dimension,
+                    density=p,
+                    burnup_time=burnup_time,
+                    neighbourhood_type=neighbourhood_type,
+                    visualize=visualize
+                )
+
+                # run simulation
+                model.simulate()
+
+                # check if percolation occured
+                if model.check_percolation():
+                    percolation_count += 1
+
+            # retrieve percolation probability over the n simulations
+            percolation_chance = percolation_count / n_simulations
+            print(f"percolation count: {percolation_count}, n simulations: {n_simulations}")
+            print("chance:", percolation_chance)
+
+            # save percolation probabilities per experiment in a dictionary
+            if p in beta_info:
+                beta_info[p].append(percolation_chance)
+            else:
+                beta_info[p] = [percolation_chance]
+
+    crit_density = get_critical_density(beta_info)
+    print()
+    print(beta_info)
+    print('critical density:', crit_density)
+
+    for p in np.arange(0.6, crit_density, step):
+        p = round(p, 4)
+        del beta_info[p]
+
+    for p in np.arange(0.9, crit_density + 5 * step, -step):
+        p = round(p, 4)
+        del beta_info[p]    
+
+    filename = f'beta_nexp={n_experiments}_nsim={n_simulations}_grtype={grid_type}_d={dimension}_btime={burnup_time}_nbh={neighbourhood_type}_critd={crit_density}'
+    if save_data:
+        with open(f'Output/{filename}.json', 'w') as fp:
+            json.dump(beta_info, fp)
+    if make_plot:
+        beta_plot(beta_info, filename, crit_density, savefig=False)
+
+    return beta_info
+
+
+def dimension_experiment(densities: np.ndarray, n_experiments: int, n_simulations: int,
+                       grid_type: str, veg_ratio: List[float], dimension: int, burnup_time: int, neighbourhood_type: str,
+                       visualize: bool, save_data: bool, make_plot: bool) -> Dict:
+    """Runs n experiments for different values of p. For every experiment a simulation
+    with the same settings is repeated m times, from which the percolation probability
+    for that value of p is calculated. for different dimensions These probabilities are saved into a dictionary.
+
+    Args:
+        densities (List[float]): density values (p) to experiment with
+        n_experiments (int): number of experiments for each p value
+        n_simulations (int): number of simulations to repeat for each experiment
+        grid_type (str): the layout of vegetation ('default' or 'mixed')
+        veg_ratio (List[float]): the ratio between different vegetation type
+        dimension (list): dimension of the Forest grid
+        burnup_time (int): burnup time for Trees
+        neighbourhood_type (str): neighbourhood model ("moore" or "von_neumann")
+        visualize (bool): whether to visualize the Forest model
+        save_data (bool): whether to save the percolation data
+        make_plot (bool): whether to make a lineplot
+
+    Returns:
+        Dict: Dictionary with percolation probabilities for different p values
+    """
+    dimension_info = {}
+
+    # for each density value
+    for p in densities:
+
+        print(f"\n------ DENSITY={p} ------\n")
+
+        # perform n experiments
+        for n in range(n_experiments):
+            print("\nEXPERIMENT:", n, "\n")
+
+            percolation_count = 0
+
+            # of a predefined range of simulations
+            for _ in range(n_simulations):
+                model = Forest(
+                    grid_type=grid_type,
+                    veg_ratio=veg_ratio,
+                    dimension=dimension,
+                    density=p,
+                    burnup_time=burnup_time,
+                    neighbourhood_type=neighbourhood_type,
+                    visualize=visualize
+                )
+
+                # run simulation
+                model.simulate()
+
+                # check if percolation occured
+                if model.check_percolation():
+                    percolation_count += 1
+
+            # retrieve percolation probability over the n simulations
+            percolation_chance = percolation_count / n_simulations
+            print(f"percolation count: {percolation_count}, n simulations: {n_simulations}")
+            print("chance:", percolation_chance)
+
+            # save percolation probabilities per experiment in a dictionary
+            if p in dimension_info:
+                dimension_info[p].append(percolation_chance)
+            else:
+                dimension_info[p] = [percolation_chance]
+
+    crit_density = get_critical_density(dimension_info)
+    print()
+    print(dimension_info)
+    print('critical density:', crit_density)
+
+    # filename = f'dimension_nexp={n_experiments}_nsim={n_simulations}_grtype={grid_type}_d={dimension}_btime={burnup_time}_nbh={neighbourhood_type}_critd={crit_density}'
+    # if save_data:
+    #     with open(f'Output/{filename}.json', 'w') as fp:
+    #         json.dump(dimension_info, fp)
+    # if make_plot:
+    #     dimension_plot(dimension_info, filename, crit_density, savefig=False)
+
+    return dimension_info

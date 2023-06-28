@@ -10,14 +10,15 @@
 import argparse
 import numpy as np
 from forest import Forest
-from experiments import density_experiment, forest_decrease_experiment
+from experiments import density_experiment, forest_decrease_experiment, beta_experiment, dimension_experiment
+from plot import dimension_plot
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Forest Fire Model')
 
-    parser.add_argument('mode', nargs='?', choices=['test', 'crit_p', 'burn_area'],
-                        help='Specify the mode to run (test, crit_p, burn_area)')
+    parser.add_argument('mode', nargs='?', choices=['test', 'crit_p', 'burn_area', 'beta', 'dimension'],
+                        help='Specify the mode to run (test, crit_p, burn_area, beta, dimension)')
     # grid dimension input
     parser.add_argument('--dimension', type=int, required=False, help='dimension of the grid')
     # grid dimension input
@@ -78,32 +79,91 @@ if __name__ == "__main__":
         model.simulate()
     # lineplot run for determining critical density
     elif args.mode == 'crit_p':
-        step = 0.05
+        step = 0.1
         results = density_experiment(
             densities=np.arange(0 + step, 1 + step, step),
-            n_experiments=10,
-            n_simulations=20,
+            n_experiments=5,
+            n_simulations=5,
             veg_ratio=veg_ratio,
             grid_type=args.grid_type,
             dimension=dimension,
             burnup_time=burnup_t,
             neighbourhood_type="moore",
             visualize=False,
-            save_data=True,
+            save_data=False,
             make_plot=True
         )
     # lineplot run for determining final forest area / initial forest area
     elif args.mode == 'burn_area':
         step = 0.05
         results = forest_decrease_experiment(
-            densities=np.arange(0 + step, 1 + step, step),
-            n_simulations=20,
+            densities=np.arange(0.8 + step, 1 + step, step),
+            n_experiments=5,
+            n_simulations=5,
             veg_ratio=veg_ratio,
             grid_type=args.grid_type,
             dimension=dimension,
             burnup_time=burnup_t,
             neighbourhood_type="moore",
             visualize=False,
-            save_data=True,
+            save_data=False,
             make_plot=True
         )
+    # scatter plot for determining the critical exponent beta
+    elif args.mode == 'beta':
+        step = 0.05 # 0.005 maybe
+        results = beta_experiment(
+            densities=np.arange(0.6, 0.9 + step, step),
+            n_experiments=2,
+            n_simulations=2,
+            veg_ratio=veg_ratio,
+            grid_type=args.grid_type,
+            dimension=dimension,
+            burnup_time=burnup_t,
+            neighbourhood_type="moore",
+            visualize=False,
+            save_data=False,
+            make_plot=True
+        )
+    # line plots for different grid sizes
+    elif args.mode == 'dimension':
+        step = 0.05 # 0.005 maybe
+        dimension=[10, 25, 100]
+        multiple_results = {}
+        for d in dimension:
+            results = dimension_experiment(
+                densities=np.arange(0.5, 0.9 + step, step),
+                n_experiments=2,
+                n_simulations=2,
+                veg_ratio=veg_ratio,
+                grid_type=args.grid_type,
+                dimension=d,
+                burnup_time=burnup_t,
+                neighbourhood_type="moore",
+                visualize=False,
+                save_data=False,
+                make_plot=False
+            )
+            # save percolation probabilities per experiment in a dictionary
+            if d in multiple_results:
+                multiple_results[d].append(results)
+            else:
+                multiple_results[d] = [results]
+
+        dimension_plot(multiple_results, savefig=False)
+
+    # elif args.mode == 'pattern':
+    #     step = 0.01 # 0.005 maybe
+    #     results = pattern_experiment(
+    #         densities=np.arange(0 + step, 1 + step, step),
+    #         n_experiments=5,
+    #         n_simulations=5,
+    #         veg_ratio=veg_ratio,
+    #         grid_type=args.grid_type,
+    #         dimension=dimension,
+    #         burnup_time=burnup_t,
+    #         neighbourhood_type="moore",
+    #         visualize=False,
+    #         save_data=False,
+    #         make_plot=True
+    #     )
