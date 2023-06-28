@@ -136,7 +136,7 @@ class Forest:
             col = np.random.randint(0, self.dimension)
             plant = self.grid[row][col]
 
-            if plant.is_tree():
+            if plant.is_tree() or plant.is_grass() or plant.is_shrub():
                 # if cell is a Tree, return the cell
                 return plant
         
@@ -154,7 +154,7 @@ class Forest:
 
         for cell in top_row:
             # check if the cell is a Tree and set it on fire
-            if cell.is_tree():
+            if cell.is_tree() or cell.is_grass() or cell.is_shrub():
                 cell.change_state(constants.FIRE)
 
     def get_lit_neighbors(self, row: int, col: int) -> Tuple[int, int]:

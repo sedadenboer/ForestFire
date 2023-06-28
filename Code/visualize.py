@@ -37,6 +37,7 @@ def visualize(grid_values: List[List[int]], showplot: bool = True, saveplot: boo
     for grid in grid_values:
         states = np.unique(grid)
         colors = [color_list[state_list.index(state)] for state in states]
+        # print(states, colors)
         
         # This step is necessary, for correct color mapping
         for i, j in enumerate(states):

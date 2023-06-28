@@ -17,7 +17,7 @@ BURNED = 5
 
 ###################### Ignition probability ######################
 P_TREE = 0.8
-P_GRASS = 0.3
+P_GRASS = 0.5
 P_SHRUB = 0.25
 
 ###################### Humidity reaction ######################

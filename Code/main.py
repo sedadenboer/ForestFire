@@ -127,7 +127,6 @@ if __name__ == "__main__":
         n_proc = 1
         
     
-
     # if no argument provided
     if args.mode is None:
         parser.print_help()
@@ -187,7 +186,7 @@ if __name__ == "__main__":
         print(results_dict)
         
         if True:
-            with open('Output/percolation_data_veg_bt.json', 'w') as fp:
+            with open('Output/percolation_data_veg_b5.json', 'w') as fp:
                 json.dump(results_dict, fp)
             
         # Make a density lineplot
