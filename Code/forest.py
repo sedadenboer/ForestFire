@@ -23,7 +23,7 @@ class Forest:
 
     def __init__(self, grid_type: str = 'default', dimension: int = 100, density: float = 0.7, burnup_time: int = 10, veg_ratio: List[float] = [0.5, 0.3, 0.2],
                  neighbourhood_type: str = 'moore', visualize: bool = False,
-                 igni_ratio_exp: bool = False, adjust_igni_tree: float = constants.TREE, adjust_igni_grass: float = constants.GRASS, adjust_igni_shrub: float = constants.SHRUB) -> None:
+                 igni_ratio_exp: bool = False, adjust_igni_tree: float = constants.P_TREE, adjust_igni_grass: float = constants.P_GRASS, adjust_igni_shrub: float = constants.P_SHRUB) -> None:
         """Forest model of the region where forest fires occur. Represented by a 2D grid,
         containing "Plant" objects that represent generic trees in the basic version of the model.
         The cells can be empty, tree, fire, or burned. The state of the forest changes over time

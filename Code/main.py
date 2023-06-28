@@ -11,7 +11,7 @@ import argparse
 import numpy as np
 from forest import Forest
 from experiments import density_experiment, forest_decrease_experiment, ignition_vs_ratio
-
+import constants
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Forest Fire Model')
@@ -108,19 +108,22 @@ if __name__ == "__main__":
             save_data=True,
             make_plot=True
         )
+    # heatmap run for percolation, dependent on plant ratios and varying 
+    # shrub ignition probability
     elif args.mode == 'igni_ratio':
-        step = 0.5
-        ratios=[[i/10, 1 - i/10, 0] for i in range(11)]
+        step = 0.2
+        test_ratios = [[1, 0, 0], [0, 0, 1]]
+        ratios = [[i/10, 0, 1 - i/10] for i in range(11)]
         results = ignition_vs_ratio(
             density=density,
             n_simulations=2,
             grid_type=args.grid_type,
             dimension=dimension,
             burnup_time=burnup_t,
-            fixed_ignition=0.5,
+            fixed_ignition=1,
             varying_ignition=np.arange(0 + step, 1 + step, step),
-            plant_ratios=[[0.9, 0.1, 0], [1, 0, 0]],
-            visualize=True,
+            plant_ratios=ratios,
+            visualize=False,
             save_data=True,
             make_plot=True
         )

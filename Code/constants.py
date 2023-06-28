@@ -16,9 +16,9 @@ FIRE = 4
 BURNED = 5
 
 ###################### Ignition probability ######################
-P_TREE = 0.8
-P_GRASS = 0.3
-P_SHRUB = 0.25
+P_TREE = 0.2
+P_GRASS = 0.8
+P_SHRUB = 0.3
 
 ###################### Humidity reaction ######################
 H_TREE = 1

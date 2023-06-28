@@ -11,8 +11,7 @@ import numpy as np
 from forest import Forest
 from typing import List, Dict
 import json
-import pandas as pd
-from plot import density_lineplot, forest_decrease_lineplot
+from plot import density_lineplot, forest_decrease_lineplot, ignition_vs_ratio_heatmap
 
 
 def density_experiment(densities: np.ndarray, n_experiments: int, n_simulations: int,
@@ -36,7 +35,7 @@ def density_experiment(densities: np.ndarray, n_experiments: int, n_simulations:
         make_plot (bool): whether to make a lineplot
 
     Returns:
-        Dict: Dictionary with percolation probabilities for different p values
+        Dict: dictionary with percolation probabilities for different p values
     """
     percolation_info = {}
 
@@ -129,7 +128,7 @@ def forest_decrease_experiment(densities: np.ndarray, n_simulations: int,
         make_plot (bool): whether to make a lineplot
 
     Returns:
-        Dict: Dictionary with forest decrease for different p values
+        Dict: dictionary with forest decrease for different p values
     """
     decrease_info = {}
 
@@ -180,18 +179,38 @@ def forest_decrease_experiment(densities: np.ndarray, n_simulations: int,
 def ignition_vs_ratio(density: int, n_simulations: int,
                       grid_type: str, dimension: int, burnup_time: int,
                       fixed_ignition: float, varying_ignition: List[float], plant_ratios: List[List[float]],
-                      visualize: bool, save_data: bool, make_plot: bool):
+                      visualize: bool, save_data: bool, make_plot: bool) -> Dict:
+    """Percolation probability measured over n simulations, with varying plant ratios (tree/shrub) and varying
+    ignition probabilities for shrubs, while keeping the ignition probability for trees fixed.
 
+    Args:
+        density (int): forest density
+        n_simulations (int): number of simulations to repeat for each experiment
+        grid_type (str): the layout of vegetation ('default' or 'mixed')
+        dimension (int): dimension of the Forest grid
+        burnup_time (int): burnup time for Trees
+        fixed_ignition (float): _description_
+        varying_ignition (List[float]): list of ratios between different vegetation type
+        plant_ratios (List[List[float]]): _description_
+        visualize (bool): whether to visualize the Forest model
+        save_data (bool): whether to save the percolation data
+        make_plot (bool): whether to make a heatmap
+
+    Returns:
+        Dict: dictionary with percolation probabilities for different plant ratios
+              and ignition probabilities for shrubs
+    """
     percolation_info = {}
 
+    # for all plant ratios
     for ratio in plant_ratios:
-        print('START')
-        print('ratio', ratio)
+        print('START, ratio:', ratio)
+        # and varying ignition probability for shrubs
         for i in varying_ignition:
             print('ignition', i)
             percolation_count = 0
-            for j in range(n_simulations):
-                print('simulation', j, '...')
+            # do n simulations and compute an average percolation 
+            for _ in range(n_simulations):
                 model = Forest(
                     grid_type=grid_type,
                     dimension=dimension,
@@ -212,16 +231,22 @@ def ignition_vs_ratio(density: int, n_simulations: int,
 
             # retrieve percolation probability over the n simulations
             percolation_chance = percolation_count / n_simulations
-            print(f"percolation count: {percolation_count}, n simulations: {n_simulations}")
-            print("chance:", percolation_chance)
+
+            print(f"percolation count: {percolation_count}")
+            print("chance:", percolation_chance, '\n')
 
             # save percolation probabilities per experiment in a dictionary
-            key = f'{ratio[0]},{ratio[1]}'
+            key = f'{round(ratio[0], 1)}/{round(ratio[2], 1)}'
             if key in percolation_info:
                 percolation_info[key].append(percolation_chance)
             else:
                 percolation_info[key] = [percolation_chance]
 
-            print()
+    filename = f'heatmap_nsim={n_simulations}_grtype={grid_type}_dens={density}_dim={dimension}_btime={burnup_time}_fixigni={fixed_ignition}'
+    if make_plot:
+        ignition_vs_ratio_heatmap(percolation_info, varying_ignition, filename, savefig=True)
+    if save_data:
+        with open(f'Output/{filename}.json', 'w') as fp:
+            json.dump(percolation_info, fp)
 
-    print(percolation_info)
+    return percolation_info
