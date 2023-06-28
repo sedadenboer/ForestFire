@@ -18,12 +18,12 @@ Our research question is formulated as follows: \
 Considering lightning as our only fire source and without tree regrowth, the percolation probability depends on the connectivity between the different cell types, which depends on the vegetation type and ignition chances. Having a well mixed grid with a plant type that is more frequent in terms of biomass and which has a lower ignition chance compared to the other plant type, will help reduce the wildfire spred.
 
 ## Model implementation
-A grid is initialized with plant cells according to a pre-defined plant density. Of those plants cells, the ratio between type 1 and 2 is varied, as well as the ignition chance of one plant type. The effect of plant bio-mass ratios and ignition chance on the percolation probability is observed. After a randomly ignited cell the fire spreads according to pre-defined rules. A simulation is repeated 10 times per paramameter combination to account for the stochasticic nature of the system.
+A grid is initialized with plant cells according to a pre-defined plant density. Of those plants cells, the ratio between type 1 and 2 is varied, as well as the ignition chance of one plant type. The effect of plant bio-mass ratios and ignition chance on the percolation probability is observed. After a randomly ignited cell, the ignition chance of neighbouring cells is calculated as the ratio of lit neighboring cells and unlit neighboring cells and depending on the plant type, there can also be a flat reduction in ignition chance specific to that plant type. If a uniformly drawn random variable is smaller than this ratio, the cell ignites. A simulation is repeated 10 times per paramameter combination to account for the stochasticic nature of the system. And 10 experiments are run, taking the average of the average percolation probability whihc is needed to calculate the variance.
 
 ### Assumptions
-critical density does not depend on grid sizes over 100
-single initial ignition event - 'lightning strike' - starts the wild fire
-no regrowth of trees because the timescales
+the critical density does not depend on grid sizes over 100
+A single initial ignition event - 'lightning strike' - starts the wild fire
+No regrowth of trees because the growth timescales are much greater than the wild fire time scales
 
 ### Default
 The default has a single plant type and fixed ignition chance. The lineplot of density versus percolation chance shows a phase transition and the first density for which the percolation probability exceeds 0.5 is taken to be the critical density. (add parameter values)
