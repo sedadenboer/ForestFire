@@ -20,6 +20,22 @@ class Plant:
         self.state = state
         self.burning_time = 0
 
+        # initialize ignition probability
+        if self.state == constants.TREE:
+            self.ignition = constants.P_TREE
+        elif self.state == constants.GRASS:
+           self.ignition = constants.P_GRASS
+        elif self.state == constants.SHRUB:
+            self.ignition = constants.P_SHRUB
+
+        # initialize humidity
+        if self.state == constants.TREE: 
+            self.humidity = constants.H_TREE
+        elif self.state == constants.GRASS:
+            self.humidity = constants.H_GRASS
+        elif self.state == constants.SHRUB:
+            self.humidity = constants.H_SHRUB
+
     def change_state(self, new_state: int) -> None:
         """Change the state of the plant.
 
@@ -76,31 +92,21 @@ class Plant:
         """
         return self.state == constants.EMPTY
 
-    def igni_probability(self) -> float:
-        """Return the probability associated with vegetation
-
-        Returns:
-            float: vegetation ignition probability
+    def set_ignition(self, value: float) -> float:
+        """Change the probability associated with vegetation.
+        
+        Args:
+            value (float): new ignition probability
         """
-        if self.state == constants.TREE:  # tree
-            return constants.P_TREE
-        elif self.state == constants.GRASS:  # grass
-            return constants.P_GRASS
-        elif self.state == constants.SHRUB:  # shrub
-            return constants.P_SHRUB
+        self.ignition = value
 
-    def humidity_effect(self) -> float:
-        """Return the humidity effect associated with vegetation
-
-        Returns:
-            float: vegetation humidity effect probability
+    def set_humidity(self, value: float) -> float:
+        """Change the humidity effect associated with vegetation.
+        
+        Args:
+            value (float): new humidity value
         """
-        if self.state == constants.TREE:  # tree
-            return constants.H_TREE
-        elif self.state == constants.GRASS:  # grass
-            return constants.H_GRASS
-        elif self.state == constants.SHRUB:  # shrub
-            return constants.H_SHRUB
+        self.humidity = value
 
     def __repr__(self) -> str:
         """Return a string representation of the plant.

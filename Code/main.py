@@ -10,14 +10,14 @@
 import argparse
 import numpy as np
 from forest import Forest
-from experiments import density_experiment, forest_decrease_experiment
+from experiments import density_experiment, forest_decrease_experiment, ignition_vs_ratio
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Forest Fire Model')
 
-    parser.add_argument('mode', nargs='?', choices=['test', 'crit_p', 'burn_area'],
-                        help='Specify the mode to run (test, crit_p, burn_area)')
+    parser.add_argument('mode', nargs='?', choices=['test', 'crit_p', 'burn_area', 'igni_ratio'],
+                        help='Specify the mode to run (test, crit_p, burn_area, igni_ratio)')
     # grid dimension input
     parser.add_argument('--dimension', type=int, required=False, help='dimension of the grid')
     # grid dimension input
@@ -72,6 +72,7 @@ if __name__ == "__main__":
             burnup_time=burnup_t,
             veg_ratio=veg_ratio,
             neighbourhood_type="moore",
+            igni_ratio_exp=False,
             visualize=True
         )
         
@@ -104,6 +105,22 @@ if __name__ == "__main__":
             burnup_time=burnup_t,
             neighbourhood_type="moore",
             visualize=False,
+            save_data=True,
+            make_plot=True
+        )
+    elif args.mode == 'igni_ratio':
+        step = 0.5
+        ratios=[[i/10, 1 - i/10, 0] for i in range(11)]
+        results = ignition_vs_ratio(
+            density=density,
+            n_simulations=2,
+            grid_type=args.grid_type,
+            dimension=dimension,
+            burnup_time=burnup_t,
+            fixed_ignition=0.5,
+            varying_ignition=np.arange(0 + step, 1 + step, step),
+            plant_ratios=[[0.9, 0.1, 0], [1, 0, 0]],
+            visualize=True,
             save_data=True,
             make_plot=True
         )

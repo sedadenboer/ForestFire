@@ -11,6 +11,7 @@ import numpy as np
 from forest import Forest
 from typing import List, Dict
 import json
+import pandas as pd
 from plot import density_lineplot, forest_decrease_lineplot
 
 
@@ -145,7 +146,7 @@ def forest_decrease_experiment(densities: np.ndarray, n_simulations: int,
                 density=p,
                 burnup_time=burnup_time,
                 neighbourhood_type=neighbourhood_type,
-                visualize=visualize
+                visualize=visualize,
             )
 
             # run simulation
@@ -175,3 +176,52 @@ def forest_decrease_experiment(densities: np.ndarray, n_simulations: int,
         forest_decrease_lineplot(decrease_info, filename, savefig=True)
 
     return decrease_info
+
+def ignition_vs_ratio(density: int, n_simulations: int,
+                      grid_type: str, dimension: int, burnup_time: int,
+                      fixed_ignition: float, varying_ignition: List[float], plant_ratios: List[List[float]],
+                      visualize: bool, save_data: bool, make_plot: bool):
+
+    percolation_info = {}
+
+    for ratio in plant_ratios:
+        print('START')
+        print('ratio', ratio)
+        for i in varying_ignition:
+            print('ignition', i)
+            percolation_count = 0
+            for j in range(n_simulations):
+                print('simulation', j, '...')
+                model = Forest(
+                    grid_type=grid_type,
+                    dimension=dimension,
+                    density=density,
+                    burnup_time=burnup_time,
+                    veg_ratio=ratio,
+                    visualize=visualize,
+                    igni_ratio_exp=True,
+                    adjust_igni_tree=fixed_ignition,
+                    adjust_igni_shrub=i
+                )
+
+                model.simulate()
+
+                # check if percolation occured
+                if model.check_percolation():
+                    percolation_count += 1
+
+            # retrieve percolation probability over the n simulations
+            percolation_chance = percolation_count / n_simulations
+            print(f"percolation count: {percolation_count}, n simulations: {n_simulations}")
+            print("chance:", percolation_chance)
+
+            # save percolation probabilities per experiment in a dictionary
+            key = f'{ratio[0]},{ratio[1]}'
+            if key in percolation_info:
+                percolation_info[key].append(percolation_chance)
+            else:
+                percolation_info[key] = [percolation_chance]
+
+            print()
+
+    print(percolation_info)

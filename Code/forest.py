@@ -18,17 +18,12 @@ import constants
 
 class Forest:
     # cell states and neighbor indices (Moore neighborhood)
-    # EMPTY = 0
-    # TREE = 1
-    # GRASS = 2
-    # SHRUB = 3
-    # FIRE = 10
-    # BURNED = -1
     MOORE_NEIGHBOURS = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
     VON_NEUMANN_NEIGHBOURS = ((-1, 0), (0, -1), (0, 1), (1, 0))
 
-    def __init__(self, grid_type: str, dimension: int, density: float, burnup_time: int, veg_ratio: List[float],
-                 neighbourhood_type: str, visualize: bool) -> None:
+    def __init__(self, grid_type: str = 'default', dimension: int = 100, density: float = 0.7, burnup_time: int = 10, veg_ratio: List[float] = [0.5, 0.3, 0.2],
+                 neighbourhood_type: str = 'moore', visualize: bool = False,
+                 igni_ratio_exp: bool = False, adjust_igni_tree: float = constants.TREE, adjust_igni_grass: float = constants.GRASS, adjust_igni_shrub: float = constants.SHRUB) -> None:
         """Forest model of the region where forest fires occur. Represented by a 2D grid,
         containing "Plant" objects that represent generic trees in the basic version of the model.
         The cells can be empty, tree, fire, or burned. The state of the forest changes over time
@@ -43,6 +38,11 @@ class Forest:
             veg_ratio (List[float]): the ratio between different vegetation type
             neighbourhood_type (str): "moore" or "von_neumann"
             visualize (bool): if a visualization should be made
+            igni_ratio_exp (bool): if True, experiment for varying veg ratios and ignition measures enabled,
+                                   otherwise normal ratio's and ignition probabilities used
+            adjust_igni_tree (float): adjusted experimental value for the tree ignition probability
+            adjust_igni_grass (float): adjusted experimental value for the grass ignition probability
+            adjust_igni_shrub (float): adjusted experimental value for the shrub ignition probability
         """
         # parameters
         self.grid_type = grid_type
@@ -57,6 +57,10 @@ class Forest:
             self.neighbourhood = Forest.MOORE_NEIGHBOURS
         else:
             self.neighbourhood = Forest.VON_NEUMANN_NEIGHBOURS
+        self.igni_ratio_exp = igni_ratio_exp
+        self.adjust_igni_tree = adjust_igni_tree
+        self.adjust_igni_grass = adjust_igni_grass
+        self.adjust_igni_shrub = adjust_igni_shrub
 
     def make_grid(self) -> np.ndarray:
         """Initializes the forest with a given dimension and tree density.
@@ -135,16 +139,6 @@ class Forest:
         plant = self.get_random_plant()
         plant.change_state(constants.FIRE)
 
-    def start_fire(self) -> None:
-        """Initializes a line of fire on top of the grid."""
-        # get cells on the top row of the grid
-        top_row = self.grid[0]
-
-        for cell in top_row:
-            # check if the cell is a Tree and set it on fire
-            if cell.is_tree():
-                cell.change_state(constants.FIRE)
-
     def get_lit_neighbors(self, row: int, col: int) -> Tuple[int, int]:
         """Calculates the number of neighboring cells and lit
         (burning) neighboring cells for a given cell.
@@ -177,7 +171,7 @@ class Forest:
 
         return neighbors, lit_neighbors
 
-    def fire_chance(self, row: int, col: int) -> float:
+    def fire_chance(self, row: int, col: int, ) -> float:
         """Calculates the probability of a cell catching fire based on the number of lit (burning)
         neighboring cells.
 
@@ -194,8 +188,18 @@ class Forest:
         if self.grid_type == 'default':
             site_igni_p, site_humidity_p = 1, 1
         else:
-            site_igni_p = self.grid[row, col].igni_probability()
-            site_humidity_p = self.grid[row, col].humidity_effect()
+            # experimental igntion values
+            if self.igni_ratio_exp:
+                if self.grid[row, col].state == constants.TREE:
+                    self.grid[row, col].set_ignition(self.adjust_igni_tree)
+                elif self.grid[row, col].state == constants.GRASS:
+                    self.grid[row, col].set_ignition(self.adjust_igni_grass)
+                elif self.grid[row, col].state == constants.SHRUB:
+                    self.grid[row, col].set_ignition(self.adjust_igni_shrub)
+                 
+            # standard igntion and humidity values
+            site_igni_p = self.grid[row, col].ignition
+            site_humidity_p = self.grid[row, col].humidity
 
         # calculate probability of catching fire (with ignition p and humidity effect)
         chance_fire = lit_neighbors_num / total_neighbors * site_igni_p * site_humidity_p
