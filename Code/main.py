@@ -97,7 +97,6 @@ if __name__ == "__main__":
         step = 0.05
         results = forest_decrease_experiment(
             densities=np.arange(0 + step, 1 + step, step),
-            n_experiments=10,
             n_simulations=20,
             veg_ratio=veg_ratio,
             grid_type=args.grid_type,

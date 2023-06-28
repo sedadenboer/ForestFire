@@ -162,10 +162,12 @@ def forest_decrease_experiment(densities: np.ndarray, n_simulations: int,
             else:
                 decrease_info[p] = [decrease]
 
+    crit_density = get_critical_density(decrease_info)
     print(f"\nN simulations:{n_simulations}")
     print(decrease_info)
+    print('critical density:', crit_density)
 
-    filename = f'forestdecrease_nsim={n_simulations}_grtype={grid_type}_d={dimension}_btime={burnup_time}_nbh={neighbourhood_type}'
+    filename = f'forestdecrease_nsim={n_simulations}_grtype={grid_type}_d={dimension}_btime={burnup_time}_nbh={neighbourhood_type}_critd={crit_density}'
     if save_data:
         with open(f'Output/{filename}.json', 'w') as fp:
             json.dump(decrease_info, fp)
