@@ -12,23 +12,38 @@ We define a 2D grid model and adhere to the percolation definition and critical 
 <em>"By definition, a cluster is percolating if and only if it is infinite. Clearly, clusters that span a finite lattice from left to right or top to bottom are candidates for percolating clusters in infinite. ... In an infinite system, there exists a_ critical occupation probability, P<sub>c</sub> , such that for p < P<sub>c</sub> there is no percolating infinite cluster, while for p > P<sub>c</sub> there is a percolating infinite cluster."</em> 
 
 Our research question is formulated as follows: \
-**How does the density and arrangement of different vegetation types affect percolation in a forest fire model?**
+**How does the density and ratio of different vegetation types affect percolation in a forest fire model?**
 
 ### Hypothesis
 Considering one single lightning strike as our only fire source and without tree regrowth, the percolation probability depends on the connectivity between the different cell types, which depends on the vegetation type and ignition chances. Having a well mixed grid with a plant type that is more frequent in terms of biomass and which has a lower ignition chance compared to the other plant type, will help reduce the wildfire spread.
 
 ## Model implementation
-A grid is initialized with plant cells according to a pre-defined plant density. Of those plants cells, the ratio between plant type 1 and 2 is varied, as well as the ignition chance of one plant type. The effect of plant bio-mass ratios and ignition chance on the percolation probability is observed. After a randomly ignited cell, the ignition chance of neighbouring cells is calculated as the ratio of lit neighboring cells and unlit neighboring cells and depending on the plant type, there can also be a flat reduction in ignition chance specific to that plant type. If a uniformly drawn random variable is smaller than this ratio, the cell ignites. A simulation is repeated 10 times per paramameter combination to account for the stochasticic nature of the system. And 10 experiments are run, taking the average of the average percolation probability whihc is needed to calculate the variance.
+A grid is initially set up with plant cells based on a predetermined plant density. The proportion between trees, grass and shrubs (3 plant types), as well as the likelihood of ignition and the humidity for one plant type, can be adjusted. Once a cell is randomly ignited, the ignition probability of neighboring cells is calculated by taking into account the number of neighboring cells that are on fire, and the external factors (ignition probability and humidity). If a randomly generated value is lower than this ratio, the cell ignites.
 
-### Assumptions
-the critical density does not depend on grid sizes over 100
-A single initial ignition event - 'lightning strike' - starts the wild fire
-No regrowth of trees because the growth timescales are much greater than the wild fire time scales
+### Rules and assumptions
+- The forest is represented as a 2D grid.
+- Each cell in the grid can have one of the following states: empty, plant, fire, or burned.
+- The forest is initialized with a certain density of trees, which can be randomly distributed or follow a specific pattern.
+- A single initial ignition event - 'lightning strike' - starts the wild fire.
+- The fire spreads from burning cells to neighboring cells based on a neighborhood type (Moore or Von Neumann).
+- The probability of a cell catching fire depends on the number of burning neighbors, the ignition probability of the vegetation type in the cell, and the humidity of the cell.
+- The fire burns for a specified burnout time (simulation steps) before a tree cell transitions to the burned state.
+- The simulation continues until all fires are extinguished or the waiting time for ignition is reached.
+- No regrowth of trees because the growth timescales are much greater than the wild fire time scales.
 
-### Default
-The default has a single plant type and fixed ignition chance. The lineplot of density versus percolation chance shows a phase transition and the first density for which the percolation probability exceeds 0.5 is taken to be the critical density. (add parameter values)
+#### Fire chance
+`[formula]`
 
-### Vegetation
+### Baseline
+To check how the basic model implementation behaves in terms of percolation, we created investigated how the percolation probability changes with the forest density for only one type of plant, in this case trees. The model settings are noted below:
+- Humidity and ignition fixed at 1
+- Dimension 100×100
+- Burnout time 10
+- Moore neighbourhood
+  
+The lineplot of density versus percolation chance shows a phase transition and the first density for which the percolation probability exceeds 0.55 is taken to be the critical density. (add parameter values)
+
+### Vegetation experiments
 Experiments with 2 or 3 vegetation types which represent trees and grass and shrubs in the case of 3 plant types
 2 types:
 the ratio of plant bio mass is varied from 0/100 to 100/0 on the x-axis while the ignition chance for one of the plant types is varied, keeping the other ignition chance fixed.
