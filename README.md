@@ -32,6 +32,8 @@ The default has a single plant type and fixed ignition chance. The lineplot of d
 Experiments with 2 or 3 vegetation types which represent trees and grass and shrubs in the case of 3 plant types
 2 types:
 the ratio of plant bio mass is varied from 50/50 to 100/0 on the x-axis while the ignition chance for one of the plant types is varied, keeping the other ignition chance fixed.
+3 types:
+Generating 3 different plots by keeping the bio mass and ignition chance for one plant type fixed per plot but varying them in different plots as to create different scenarios. The remaining 2 plant types are varied as described earlier.
 
 ## Results
 
