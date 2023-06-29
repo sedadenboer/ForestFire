@@ -32,7 +32,8 @@ A grid is initially set up with plant cells based on a predetermined plant densi
 - No regrowth of trees because the growth timescales are much greater than the wild fire time scales.
 
 #### Fire chance
-`[formula]`
+chance_fire = lit_neighbors_num / total_neighbors * site_igni_p * site_humidity_p
+`P = (Σf_m / Σn_m) * i * h`
 
 ### Baseline
 To check how the basic model implementation behaves in terms of percolation, we created investigated how the percolation probability changes with the forest density for only one type of plant, in this case trees. The model settings are noted below:

@@ -10,14 +10,14 @@
 import argparse
 import numpy as np
 from forest import Forest
-from experiments import density_experiment, forest_decrease_experiment, ignition_vs_ratio
-import constants
+from experiments import density_experiment, forest_decrease_experiment, ignition_vs_ratio_2
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Forest Fire Model')
 
-    parser.add_argument('mode', nargs='?', choices=['test', 'crit_p', 'burn_area', 'igni_ratio'],
-                        help='Specify the mode to run (test, crit_p, burn_area, igni_ratio)')
+    parser.add_argument('mode', nargs='?', choices=['test', 'crit_p', 'burn_area', 'igni_ratio_2'],
+                        help='Specify the mode to run (test, crit_p, burn_area, igni_ratio_2)')
     # grid dimension input
     parser.add_argument('--dimension', type=int, required=False, help='dimension of the grid')
     # grid dimension input
@@ -110,13 +110,13 @@ if __name__ == "__main__":
         )
     # heatmap run for percolation, dependent on plant ratios and varying 
     # shrub ignition probability
-    elif args.mode == 'igni_ratio':
-        step = 0.2
+    elif args.mode == 'igni_ratio_2':
+        step = 0.1
         test_ratios = [[1, 0, 0], [0, 0, 1]]
         ratios = [[i/10, 0, 1 - i/10] for i in range(11)]
-        results = ignition_vs_ratio(
+        results = ignition_vs_ratio_2(
             density=density,
-            n_simulations=2,
+            n_simulations=20,
             grid_type=args.grid_type,
             dimension=dimension,
             burnup_time=burnup_t,

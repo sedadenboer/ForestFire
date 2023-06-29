@@ -176,7 +176,7 @@ def forest_decrease_experiment(densities: np.ndarray, n_simulations: int,
 
     return decrease_info
 
-def ignition_vs_ratio(density: int, n_simulations: int,
+def ignition_vs_ratio_2(density: int, n_simulations: int,
                       grid_type: str, dimension: int, burnup_time: int,
                       fixed_ignition: float, varying_ignition: List[float], plant_ratios: List[List[float]],
                       visualize: bool, save_data: bool, make_plot: bool) -> Dict:
