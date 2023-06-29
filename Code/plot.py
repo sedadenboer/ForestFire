@@ -41,3 +41,34 @@ def density_lineplot(data: Dict, savefig: bool) -> None:
     if savefig:
         plt.savefig('Plots/density_lineplot_veg_b5.png', dpi=400)
     plt.show()
+
+
+
+def ignition_vs_ratio_heatmap(data: Dict, ignition_list: List[float], filename: str, savefig: bool) -> None:
+    """Makes a heatmap of the results of experimenting with the percolation probability
+    over n simulations with varying plant ratios (tree/shrub) and varying ignition
+    probabilities for shrubs, while keeping the ignition probability for trees fixed.
+
+    Args:
+        data (Dict): _description_
+        ignition_list (List[float]): _description_
+        filename (str): _description_
+        savefig (bool): _description_
+    """
+    # create DataFrame from dictionary
+    df = pd.DataFrame.from_dict(data)
+    # use ignition probability of shrubs as index
+    df.index = [round(num, 2) for num in ignition_list]
+
+    display(df)
+
+    # plot the heatmap
+    plt.figure()
+    sns.set_style('ticks')
+    ax = sns.heatmap(df, annot=True, cbar_kws={'label': 'Percolation probability'}, cmap=sns.color_palette("rocket_r", as_cmap=True))
+    ax.invert_yaxis()
+    ax.set_xlabel('Vegetation ratio (tree/shrub)')
+    ax.set_ylabel('Ignition probability shrub')
+    if savefig:
+        plt.savefig(f'Plots/heatmap_{filename}.png', dpi=400, bbox_inches='tight')
+    plt.show()

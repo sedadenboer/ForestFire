@@ -100,6 +100,11 @@ def experiment(density: float, dimension: int, veg_ratio: List[float], burnup_t:
     print(f"\n------ DENSITY={density} ------\n")
     
     results = []
+    
+    burned_areas = []
+    
+    print(const.P_GRASS)
+    
     for n in range(n_experiments):
         percolation_count = 0
         
@@ -115,6 +120,10 @@ def experiment(density: float, dimension: int, veg_ratio: List[float], burnup_t:
             while const.FIRE in state_grid:
                 frames.append(state_grid.copy())
                 state_grid, burnup_t_grid = simulate(state_grid, burnup_t, burnup_t_grid)
+            
+            # for calculating burned area
+            burned_area = np.count_nonzero(state_grid == const.BURNED) / (dimension**2)
+            burned_areas.append(burned_area)
                 
             # check percolation
             if const.BURNED in state_grid[-1][:]:
@@ -122,59 +131,124 @@ def experiment(density: float, dimension: int, veg_ratio: List[float], burnup_t:
                 
             # retrieve percolation probability over the n simulations
         percolation_chance = percolation_count / n_simulations
-        print(f"percolation count: {percolation_count}, n simulations: {n_simulations}")
-        print("chance:", percolation_chance)
+        # print(f"percolation count: {percolation_count}, n simulations: {n_simulations}")
+        # print("chance:", percolation_chance)
+        
         
         results.append(percolation_chance)
         
+    avg_burned_area = np.array(burned_areas).mean()
+        
     print(f"\n------ DENSITY: {density} finished ------\n")
                 
-    return results
+    return avg_burned_area, results
 
 
-if __name__ == "__main__":
+def experiments(rep, density):
     
-    step = 0.01
-    densities = np.arange(0.01, 1 + step, step)
-    # densities = [0.8]
+    # # Veg line plot experiment
+    # step = 0.01
+    # densities = np.arange(0.01, 1 + step, step)
+    # dimension = 100
+    # veg_ratios = np.arange(0.00, 1.00+0.01, 0.01)
+    # burnup_ts = [1,2,3,4,5,6,7,8,9,10]
     
+    # pool = mp.Pool(8)
+    # import functools
+    
+    # for veg_ratio in veg_ratios:
+    #     for burnup_t in burnup_ts:
+    
+    #         # run experiments
+            
+    #         # # serial version
+    #         # results = []
+    #         # for density in densities:
+    #         #     frames, result = experiment(density, dimension, [veg_ratio, 1-veg_ratio, 0], burnup_t)
+    #         #     results.append(result)
+            
+    #         # parallel version
+    #         results = pool.map(functools.partial(experiment,
+    #                                              dimension=dimension, 
+    #                                              veg_ratio=[veg_ratio, 1-veg_ratio, 0], 
+    #                                              burnup_t=burnup_t), densities)
+                                
+    #         # frames = frames[-1]
+            
+    #         results_dict = dict(zip(densities,results))
+                
+    #         print(results_dict)
+            
+    #         if True:
+    #             with open(f'Output/size100_1/cript_p_b{burnup_t}_r_{veg_ratio}_{round(1- veg_ratio, 1)}.json', 'w') as fp:
+    #                 json.dump(results_dict, fp)
+                    
+    
+    # Heatmap experiments
     dimension = 100
-    veg_ratios = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    burnup_ts = [1,2,3,4,5,6,7,8,9,10]
+    density = density
+    setp_size = 0.05
+    veg_ratios = np.arange(0.00, 1.00 + setp_size, setp_size)
+    igni_probs = np.arange(0.00, 1.00 + setp_size, setp_size)
+    burnup_t = 10
     
-    pool = mp.Pool(8)
-    import functools
     
+    perco_prob = []
+    burned_area = []
     for veg_ratio in veg_ratios:
-        for burnup_t in burnup_ts:
+        avg_perco_probs = []
+        avg_burned_areas = []
+        for igni_prob in igni_probs:
+            
+            const.P_GRASS = igni_prob
     
-            # run experiments
+            # serial version
+            avg_burned_area, results = experiment(density, dimension, [veg_ratio, 1-veg_ratio, 0], burnup_t)
             
-            # # serial version
-            # results = []
-            # for density in densities:
-            #     frames, result = experiment(density, dimension, [veg_ratio, 1-veg_ratio, 0], burnup_t)
-            #     results.append(result)
+            # We are interested in the average percolation probability
+            avg_percolation_prob = np.mean(np.array(results))
             
-            # parallel version
-            results = pool.map(functools.partial(experiment,
-                                                 dimension=dimension, 
-                                                 veg_ratio=[veg_ratio, 1-veg_ratio, 0], 
-                                                 burnup_t=burnup_t), densities)
+            avg_perco_probs.append(avg_percolation_prob)
+            avg_burned_areas.append(avg_burned_area)
                                 
             # frames = frames[-1]
             
-            results_dict = dict(zip(densities,results))
-                
-            print(results_dict)
+        perco_prob.append(avg_perco_probs)
+        burned_area.append(avg_burned_areas)
             
-            if True:
-                with open(f'Output/size100_1/cript_p_b{burnup_t}_r_{veg_ratio}_{round(1- veg_ratio, 1)}.json', 'w') as fp:
-                    json.dump(results_dict, fp)
-                    
-    pool.close()
+    perco_prob_dict = dict(zip(np.round(veg_ratios, 2),perco_prob))
+    avg_burn_dict = dict(zip(np.round(veg_ratios, 2),burned_area))
+    
+    print(perco_prob_dict, avg_burn_dict)
+    
+    filename_perco = f'perco_rep{rep}'
+    filename_area = f'area_rep{rep}'
+    
+    if True:
+        with open(f'Output/Heatmaps/perco_density_{density}/{filename_perco}.json', 'w') as fp:
+            json.dump(perco_prob_dict, fp)
+            
+        with open(f'Output/Heatmaps/area_density_{density}/{filename_area}.json', 'w') as fp:
+            json.dump(avg_burn_dict, fp)
+            
     
     # visualize(
     #             frames, showplot=True, saveplot=True,
     #             filename='simulation_animation'
     #         )
+
+
+if __name__ == "__main__":
+    
+    rep = [1,2,3,4,5]
+    
+    pool = mp.Pool(5)
+    
+    import functools
+    
+    for density in [0.6, 0.7, 0.8, 0.9]:
+        
+        pool.map(functools.partial(experiments, density=density), rep)
+    
+    pool.close()
+    
