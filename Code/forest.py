@@ -72,6 +72,7 @@ class Forest:
         grid = np.full((self.dimension, self.dimension), Plant(constants.EMPTY), dtype=object)
         plant_type = [constants.EMPTY, constants.TREE, constants.GRASS, constants.SHRUB]
 
+        # default settings
         if self.grid_type == 'default':
             # choose random spots in the grid to place trees, according to predefined density
             trees_number = round((self.dimension ** 2) * self.density)
@@ -87,8 +88,9 @@ class Forest:
                 col = index % self.dimension
                 grid[row][col] = Plant(constants.TREE)
         else:
-            veg_grid = np.zeros((self.dimension,self.dimension))
+            veg_grid = np.zeros((self.dimension, self.dimension))
 
+            # place vegetation in stripe layout
             if self.grid_type == 'stripe':
                 lengths = np.round(np.array(self.veg_ratio) * len(grid[:, 0])).astype(int)
                 splits = np.split(np.arange(self.dimension), np.cumsum(lengths)[:-1])
@@ -97,6 +99,7 @@ class Forest:
                 for i, split in enumerate(splits):
                     veg_grid[split] = np.random.choice([constants.EMPTY,plant_type[i+1]],
                                                     size=(len(split), self.dimension), p=[1-self.density, self.density])
+            # place vegetation in vertical layout
             elif self.grid_type == 'vertical':
                 lengths = np.round(np.array(self.veg_ratio) * len(grid[:,0])).astype(int)
                 splits = np.split(np.arange(self.dimension), np.cumsum(lengths)[:-1])
@@ -107,11 +110,12 @@ class Forest:
                                                     size=(len(split), self.dimension), p=[1 - self.density, self.density])
 
                 veg_grid = np.rot90(veg_grid)
+            # place vegetation randomly
             elif self.grid_type == 'random':
                 p_list = np.concatenate([np.array([1 - self.density]), np.array(self.veg_ratio) * self.density])
                 veg_grid = np.random.choice(plant_type, size=(self.dimension, self.dimension), p=p_list)
 
-            # place plants according to the grid vegetation layout
+            # plant plants
             for i in range(veg_grid.shape[0]):
                 for j in range(veg_grid.shape[1]):
                     grid[i][j] = Plant(veg_grid[i][j])
@@ -131,7 +135,7 @@ class Forest:
             plant = self.grid[row][col]
 
             if plant.is_tree() or plant.is_shrub() or plant.is_grass():
-                # if cell is a Tree, return the cell
+                # if cell is a plant, return the cell
                 return plant
 
     def start_fire_randomly(self) -> None:
@@ -186,9 +190,10 @@ class Forest:
         total_neighbors, lit_neighbors_num = self.get_lit_neighbors(row, col)
 
         if self.grid_type == 'default':
+            # ignore effects of ignition or humidity probabilities
             site_igni_p, site_humidity_p = 1, 1
         else:
-            # experimental igntion values
+            # experimental ignition values
             if self.igni_ratio_exp:
                 if self.grid[row, col].state == constants.TREE:
                     self.grid[row, col].set_ignition(self.adjust_igni_tree)
@@ -197,7 +202,7 @@ class Forest:
                 elif self.grid[row, col].state == constants.SHRUB:
                     self.grid[row, col].set_ignition(self.adjust_igni_shrub)
                  
-            # standard igntion and humidity values
+            # standard ignition and humidity values
             site_igni_p = self.grid[row, col].ignition
             site_humidity_p = self.grid[row, col].humidity
 
@@ -211,10 +216,10 @@ class Forest:
         Returns:
             bool: if forest is on fire
         """
-        # Convert the grid to a NumPy array
+        # convert the grid to a NumPy array
         grid_array = self.get_forest_state()
 
-        # Check if the Fire value exists in the grid
+        # check if the Fire value exists in the grid
         is_present = np.any(grid_array == constants.FIRE)
 
         if is_present:
@@ -284,9 +289,7 @@ class Forest:
         Returns:
             float: burned area ratio
         """
-        burned_area = np.count_nonzero(self.frames[-1] == constants.BURNED) / (self.dimension ** 2)
-
-        return burned_area
+        return np.count_nonzero(self.frames[-1] == constants.BURNED) / (self.dimension ** 2)
 
     def update_forest_state(self) -> None:
         """Updates the state of the forest based on forest fire spread rules.

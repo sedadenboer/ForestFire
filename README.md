@@ -11,11 +11,8 @@ We define a 2D grid model and adhere to the percolation definition and critical 
 
 <em>"By definition, a cluster is percolating if and only if it is infinite. Clearly, clusters that span a finite lattice from left to right or top to bottom are candidates for percolating clusters in infinite. ... In an infinite system, there exists a_ critical occupation probability, P<sub>c</sub> , such that for p < P<sub>c</sub> there is no percolating infinite cluster, while for p > P<sub>c</sub> there is a percolating infinite cluster."</em> 
 
-Our research question is formulated as follows: \
+Thus, with the model we focused on implementing functions to answer to following question: \
 **How does the density and ratio of different vegetation types affect percolation in a forest fire model?**
-
-### Hypothesis
-Considering one single lightning strike as our only fire source and without tree regrowth, the percolation probability depends on the connectivity between the different cell types, which depends on the vegetation type and ignition chances. Having a well mixed grid with a plant type that is more frequent in terms of biomass and which has a lower ignition chance compared to the other plant type, will help reduce the wildfire spread.
 
 ## Model implementation
 A grid is initially set up with plant cells based on a predetermined plant density. The proportion between trees, grass and shrubs (3 plant types), as well as the likelihood of ignition and the humidity for one plant type, can be adjusted. Once a cell is randomly ignited, the ignition probability of neighboring cells is calculated by taking into account the number of neighboring cells that are on fire, and the external factors (ignition probability and humidity). If a randomly generated value is lower than this ratio, the cell ignites.
@@ -24,39 +21,17 @@ A grid is initially set up with plant cells based on a predetermined plant densi
 - The forest is represented as a 2D grid.
 - Each cell in the grid can have one of the following states: empty, plant, fire, or burned.
 - The forest is initialized with a certain density of trees, which can be randomly distributed or follow a specific pattern.
-- A single initial ignition event - 'lightning strike' - starts the wild fire.
+- A single initial ignition event - 'lightning strike' - starts the wildfire.
 - The fire spreads from burning cells to neighboring cells based on a neighborhood type (Moore or Von Neumann).
 - The probability of a cell catching fire depends on the number of burning neighbors, the ignition probability of the vegetation type in the cell, and the humidity of the cell.
 - The fire burns for a specified burnout time (simulation steps) before a tree cell transitions to the burned state.
 - The simulation continues until all fires are extinguished.
-- No regrowth of trees because the growth timescales are much greater than the wild fire time scales.
+- No regrowth of trees because the growth timescales are much greater than the wildfire time scales.
 
 #### Fire chance
-chance_fire = lit_neighbors_num / total_neighbors * site_igni_p * site_humidity_p
-`P = (Σf_m / Σn_m) * i * h`
-
-### Baseline
-To check how the basic model implementation behaves in terms of percolation, we created investigated how the percolation probability changes with the forest density for only one type of plant, in this case trees. The model settings are noted below:
-- Humidity and ignition fixed at 1
-- Dimension 100×100
-- Burnout time 10
-- Moore neighbourhood
-  
-The lineplot of density versus percolation chance shows a phase transition and the first density for which the percolation probability exceeds 0.55 is taken to be the critical density. (add parameter values)
-
-### Vegetation experiments
-Experiments with 2 or 3 vegetation types which represent trees and grass and shrubs in the case of 3 plant types
-2 types:
-the ratio of plant bio mass is varied from 0/100 to 100/0 on the x-axis while the ignition chance for one of the plant types is varied, keeping the other ignition chance fixed.
-3 types:
-Generating 3 different plots by keeping the bio mass and ignition chance for one plant type fixed per plot but varying them in different plots as to create different scenarios. The remaining 2 plant types are varied as described earlier.
-
-## Results
-
-## Conclusion
+`chance_fire = total neighbours on fire / total neighbours * ignition * humidity`
 
 ## Structure of the repository
-* The program can be run with main.py.
 * Code filemap: The code filemap contains all of the scripts of the model, experiments and plots.
 * Output filemap: json files generated from the experiments will be saved here, as well as the animation GIFs.
 * Plots filemap: plots generated from experimenets will be saved here.
@@ -77,9 +52,32 @@ This program is fully written in [Python (3.11.0)](https://www.python.org/downlo
 
 `pip install -r requirements.txt`
 
-### Testing
+### Usage
+The model can be run with the following command:
 
-## Presentation link
+`python main.py [mode] [arguments]`
+
+Replace `[mode]` with one of the following modes:
+
+- `test`: Runs a test simulation of the forest fire model.
+- `crit_p`: Performs a density experiment to evaluate the percolation probability for varying densities, and determine the critical density for forest fire propagation.
+- `burn_area`: Conducts an experiment to measure the burned area over time for varying densities.
+- `igni_ratio_2`: Generates a heatmap to analyze the percolation of fire based on plant ratios (trees/shrubs) and varying shrub ignition probabilities.
+
+Provide additional arguments based on the chosen mode. The available arguments are as follows:
+
+- `--dimension [value]`: Specifies the dimension of the grid (integer value).
+- `--density [value]`: Sets the density of plants in the forest (float value).
+- `--burnup [value]`: Specifies the fire burnout time (integer value).
+- `--veg_ratio [tree] [grass] [shrub]`: Sets the ratio of vegetation types in the grid (float values, summing up to 1).
+
+Example:\
+`python main.py test random --dimension 100 --density 0.8 --burnup 10 --veg_ratio 0.4 0.3 0.3 `
+
+![Forest fire simulation](Code/Output/simulation_animation.gif)
+
+### Vectorized parallel version for the forest density / plant ratio experiment
+#TODO
 
 ## Authors
 - [@sedadenboer](https://github.com/sedadenboer)

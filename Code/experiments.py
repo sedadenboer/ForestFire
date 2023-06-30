@@ -15,7 +15,8 @@ from plot import density_lineplot, burned_area_lineplot, ignition_vs_ratio_heatm
 
 
 def density_experiment(densities: np.ndarray, n_experiments: int, n_simulations: int,
-                       grid_type: str, veg_ratio: List[float], dimension: int, burnup_time: int, neighbourhood_type: str,
+                       grid_type: str, veg_ratio: List[float], dimension: int,
+                       burnup_time: int, neighbourhood_type: str,
                        visualize: bool, save_data: bool, make_plot: bool) -> Dict:
     """Runs n experiments for different values of p. For every experiment a simulation
     with the same settings is repeated m times, from which the percolation probability
@@ -84,6 +85,7 @@ def density_experiment(densities: np.ndarray, n_experiments: int, n_simulations:
     print(percolation_info)
     print('critical density:', crit_density)
 
+    # save data and make plot
     filename = f'density_nexp={n_experiments}_nsim={n_simulations}_grtype={grid_type}_d={dimension}_btime={burnup_time}_nbh={neighbourhood_type}_critd={crit_density}'
     if save_data:
         with open(f'Output/{filename}.json', 'w') as fp:
@@ -162,11 +164,13 @@ def forest_decrease_experiment(densities: np.ndarray, n_simulations: int,
             else:
                 decrease_info[p] = [burned]
 
+    # get critical density
     crit_density = get_critical_density(decrease_info)
     print(f"\nN simulations:{n_simulations}")
     print(decrease_info)
     print('critical density:', crit_density)
 
+     # save data and make plot
     filename = f'burnedarea_nsim={n_simulations}_grtype={grid_type}_d={dimension}_btime={burnup_time}_nbh={neighbourhood_type}_critd={crit_density}'
     if save_data:
         with open(f'Output/{filename}.json', 'w') as fp:
@@ -242,6 +246,7 @@ def ignition_vs_ratio_2(density: int, n_simulations: int,
             else:
                 percolation_info[key] = [percolation_chance]
 
+    # save data and make plot
     filename = f'heatmap_nsim={n_simulations}_grtype={grid_type}_dens={density}_dim={dimension}_btime={burnup_time}_fixigni={fixed_ignition}'
     if make_plot:
         ignition_vs_ratio_heatmap(percolation_info, varying_ignition, filename, savefig=True)

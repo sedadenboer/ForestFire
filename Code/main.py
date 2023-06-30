@@ -30,8 +30,6 @@ if __name__ == "__main__":
     # vegetation grid type input
     parser.add_argument('grid_type', nargs='?', choices=['default', 'stripe', 'block', 'random'],
                         help='Specify the mode to run (test, crit_p, burn_area)')
-    # number of processors for simulation
-    parser.add_argument('--np', type=int, required=False, help='fire burnup time')
 
     args = parser.parse_args()
     
@@ -40,7 +38,7 @@ if __name__ == "__main__":
     if args.dimension:
         dimension = args.dimension
     else:
-        dimension = 50
+        dimension = 100
     if args.density:
         density = args.density
     else:
@@ -48,17 +46,12 @@ if __name__ == "__main__":
     if args.burnup:
         burnup_t = args.burnup
     else:
-        burnup_t = 1
+        burnup_t = 10
     # take vegetation ratio from input
     if args.veg_ratio:
         veg_ratio = args.veg_ratio
     else:
         veg_ratio = []
-    # parallel setting
-    if args.np:
-        n_proc = args.np
-    else:
-        n_proc = 1
 
     # if no argument provided
     if not args.mode:

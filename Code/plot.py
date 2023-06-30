@@ -77,10 +77,10 @@ def ignition_vs_ratio_heatmap(data: Dict, ignition_list: List[float], filename: 
     probabilities for shrubs, while keeping the ignition probability for trees fixed.
 
     Args:
-        data (Dict): _description_
-        ignition_list (List[float]): _description_
-        filename (str): _description_
-        savefig (bool): _description_
+        data (Dict): percolation data of experiment
+        ignition_list (List[float]): range of ignition
+        filename (str): experiment specific filename
+        savefig (bool): True if figure should be saved, otherwise False
     """
     # create DataFrame from dictionary
     df = pd.DataFrame.from_dict(data)
