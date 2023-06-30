@@ -41,7 +41,7 @@ def density_lineplot(data: Dict, filename: str, savefig: bool) -> None:
         plt.savefig(f'Plots/{filename}.png', dpi=400)
     plt.show()
 
-def forest_decrease_lineplot(data: Dict, filename: str, savefig: bool) -> None:
+def burned_area_lineplot(data: Dict, filename: str, savefig: bool) -> None:
     """Makes a lineplot of the forest decrease ratio for different
     values of the forest density, with 95% confidence interval for
     n experiments and m simulations of the forest fire model.
@@ -66,9 +66,9 @@ def forest_decrease_lineplot(data: Dict, filename: str, savefig: bool) -> None:
     sns.lineplot(data=df, x='p', y='Forest',
                  color='tomato', markers=True, dashes=False)
     plt.xlabel('p')
-    plt.ylabel('Final forest density / initial forest density')
+    plt.ylabel('Final burned area percentage')
     if savefig:
-        plt.savefig(f'Plots/forestdecrease_{filename}.png', dpi=400)
+        plt.savefig(f'Plots/burnedarea_{filename}.png', dpi=400)
     plt.show()
 
 def ignition_vs_ratio_heatmap(data: Dict, ignition_list: List[float], filename: str, savefig: bool) -> None:

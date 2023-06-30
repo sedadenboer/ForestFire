@@ -277,18 +277,16 @@ class Forest:
         n_edges_fire = sum([1 for lst in [fire_top, fire_bot, fire_left, fire_right] if len(lst) > 0])
         return n_edges_fire == 4
 
-    def forest_decrease(self) -> float:
-        """Calculates the percentage difference in trees between the first and last frame.
+    def burned_area(self) -> float:
+        """Calculates the relative amount of burned trees at the
+        end of the simulation.
 
         Returns:
-            float: ratio of final trees/intial trees
+            float: burned area ratio
         """
-        initial_trees = np.count_nonzero(self.frames[0] == constants.TREE)
-        final_trees = np.count_nonzero(self.frames[-1] == constants.TREE)
+        burned_area = np.count_nonzero(self.frames[-1] == constants.BURNED) / (self.dimension ** 2)
 
-        flux = (final_trees / initial_trees)
-
-        return flux
+        return burned_area
 
     def update_forest_state(self) -> None:
         """Updates the state of the forest based on forest fire spread rules.

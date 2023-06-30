@@ -80,8 +80,10 @@ if __name__ == "__main__":
     # lineplot run for determining critical density
     elif args.mode == 'crit_p':
         step = 0.05
+        densities_list = np.arange(0 + step, 1 + step, step)
+        rounded_values = np.round(densities_list, 2)
         results = density_experiment(
-            densities=np.arange(0 + step, 1 + step, step),
+            densities=rounded_values,
             n_experiments=10,
             n_simulations=20,
             veg_ratio=veg_ratio,
@@ -96,9 +98,11 @@ if __name__ == "__main__":
     # lineplot run for determining final forest area / initial forest area
     elif args.mode == 'burn_area':
         step = 0.05
+        densities_list = np.arange(0 + step, 1 + step, step)
+        rounded_values = np.round(densities_list, 2)
         results = forest_decrease_experiment(
-            densities=np.arange(0 + step, 1 + step, step),
-            n_simulations=20,
+            densities=rounded_values,
+            n_simulations=50,
             veg_ratio=veg_ratio,
             grid_type=args.grid_type,
             dimension=dimension,

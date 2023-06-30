@@ -11,7 +11,7 @@ import numpy as np
 from forest import Forest
 from typing import List, Dict
 import json
-from plot import density_lineplot, forest_decrease_lineplot, ignition_vs_ratio_heatmap
+from plot import density_lineplot, burned_area_lineplot, ignition_vs_ratio_heatmap
 
 
 def density_experiment(densities: np.ndarray, n_experiments: int, n_simulations: int,
@@ -152,27 +152,27 @@ def forest_decrease_experiment(densities: np.ndarray, n_simulations: int,
             model.simulate()
 
             # check if percolation occured
-            decrease = model.forest_decrease()
+            burned = model.burned_area()
 
-            print(f"forest decrease: {decrease}")
+            print(f"burned area: {burned}")
 
             # save percolation probabilities per experiment in a dictionary
             if p in decrease_info:
-                decrease_info[p].append(decrease)
+                decrease_info[p].append(burned)
             else:
-                decrease_info[p] = [decrease]
+                decrease_info[p] = [burned]
 
     crit_density = get_critical_density(decrease_info)
     print(f"\nN simulations:{n_simulations}")
     print(decrease_info)
     print('critical density:', crit_density)
 
-    filename = f'forestdecrease_nsim={n_simulations}_grtype={grid_type}_d={dimension}_btime={burnup_time}_nbh={neighbourhood_type}_critd={crit_density}'
+    filename = f'burnedarea_nsim={n_simulations}_grtype={grid_type}_d={dimension}_btime={burnup_time}_nbh={neighbourhood_type}_critd={crit_density}'
     if save_data:
         with open(f'Output/{filename}.json', 'w') as fp:
             json.dump(decrease_info, fp)
     if make_plot:
-        forest_decrease_lineplot(decrease_info, filename, savefig=True)
+        burned_area_lineplot(decrease_info, filename, savefig=True)
 
     return decrease_info
 

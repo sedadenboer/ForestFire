@@ -28,7 +28,7 @@ A grid is initially set up with plant cells based on a predetermined plant densi
 - The fire spreads from burning cells to neighboring cells based on a neighborhood type (Moore or Von Neumann).
 - The probability of a cell catching fire depends on the number of burning neighbors, the ignition probability of the vegetation type in the cell, and the humidity of the cell.
 - The fire burns for a specified burnout time (simulation steps) before a tree cell transitions to the burned state.
-- The simulation continues until all fires are extinguished or the waiting time for ignition is reached.
+- The simulation continues until all fires are extinguished.
 - No regrowth of trees because the growth timescales are much greater than the wild fire time scales.
 
 #### Fire chance
