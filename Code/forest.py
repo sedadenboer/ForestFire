@@ -249,21 +249,6 @@ class Forest:
 
         return [top_edge, bottom_edge, left_edge, right_edge]
 
-    def check_percolation_bottom(self) -> bool:
-        """Checks if the bottom row of self.grid contains any FIRE or BURNED cells.
-
-        Returns:
-            bool: True if the bottom row contains FIRE or BURNED cells, False otherwise.
-        """
-        # get cells on the bottom row of the grid
-        bottom_row = self.grid[-1]
-
-        for cell in bottom_row:
-            # check if a cell is on fire or has been burned
-            if cell.is_burning() or cell.is_burned():
-                return True
-        return False
-
     def check_percolation(self) -> bool:
         """Checks if fire has reached all edges of the grid.
 
