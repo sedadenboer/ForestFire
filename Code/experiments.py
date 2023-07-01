@@ -14,7 +14,7 @@ import json
 import pandas as pd
 from scipy.optimize import curve_fit
 from sklearn.metrics import r2_score
-from plot import density_lineplot, forest_decrease_lineplot, beta_plot, burn_plot, dimension_plot
+from plot import density_lineplot, burned_area_lineplot, ignition_vs_ratio_heatmap, beta_plot
 
 
 def density_experiment(densities: np.ndarray, n_experiments: int, n_simulations: int,
