@@ -63,6 +63,9 @@ Replace `[mode]` with one of the following modes:
 - `crit_p`: Performs a density experiment to evaluate the percolation probability for varying densities, and determine the critical density for forest fire propagation.
 - `burn_area`: Conducts an experiment to measure the burned area over time for varying densities.
 - `igni_ratio_2`: Generates a heatmap to analyze the percolation of fire based on plant ratios (trees/shrubs) and varying shrub ignition probabilities.
+- `beta`: Calculates the beta parameter by fitting a power law to (data points - p_c) close to the critical density.
+- `dimension`: Shows the density lineplot for different dimension of the initial grid to determine the grid size where the calculated critical density has the lowest error.
+- `burn`: Calculates the goodness of fit for for different burnup times to determine which times correspond to a percolating system.
 
 Provide additional arguments based on the chosen mode. The available arguments are as follows:
 
