@@ -10,14 +10,16 @@
 import argparse
 import numpy as np
 from forest import Forest
-from experiments import density_experiment, forest_decrease_experiment, ignition_vs_ratio_2
+# from forest2 import Forest
+from experiments import density_experiment, forest_decrease_experiment, ignition_vs_ratio_2, beta_experiment,  burn_experiment, dimension_experiment
+from plot import dimension_plot, burn_plot
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Forest Fire Model')
 
-    parser.add_argument('mode', nargs='?', choices=['test', 'crit_p', 'burn_area', 'igni_ratio_2'],
-                        help='Specify the mode to run (test, crit_p, burn_area, igni_ratio_2)')
+    parser.add_argument('mode', nargs='?', choices=['test', 'crit_p', 'burn_area', 'igni_ratio_2', 'beta', 'burn', 'dimension', 'name'],
+                        help='Specify the mode to run (test, crit_p, burn_area, igni_ratio_2, beta, burn, dimension, name)')
     # grid dimension input
     parser.add_argument('--dimension', type=int, required=False, help='dimension of the grid')
     # grid dimension input
@@ -124,3 +126,84 @@ if __name__ == "__main__":
             save_data=True,
             make_plot=True
         )
+    # scatter plot for determining the critical exponent beta
+    elif args.mode == 'beta':
+        step = 0.005 # 0.005 maybe
+        results = beta_experiment(
+            densities=np.arange(0.5 + step, 0.6 + step, step),
+            n_experiments=5,
+            n_simulations=5,
+            veg_ratio=veg_ratio,
+            grid_type=args.grid_type,
+            dimension=dimension,
+            burnup_time=burnup_t,
+            neighbourhood_type="moore",
+            visualize=False,
+            save_data=False,
+            make_plot=True
+        )
+    # scatter plot for determining the burnup times for which the system percolates
+    elif args.mode == 'burn':
+        step = 0.005 # 0.005 maybe
+        burn_time = []
+        gof = []
+        std = []
+        for burn in [6, 7, 8, 9, 10, 11, 12, 13]:
+            results = burn_experiment(
+                densities=np.arange(0.5 + step, 0.6 + step, step),
+                n_experiments=10,
+                n_simulations=10,
+                veg_ratio=veg_ratio,
+                grid_type=args.grid_type,
+                dimension=dimension,
+                burnup_time=burn,
+                neighbourhood_type="moore",
+                visualize=False,
+                save_data=False,
+                make_plot=False
+        )
+            burn_time.append(burn)
+            gof.append(results[0])
+            std.append(results[1])
+
+        burn_plot(burn_time, gof, savefig=False)
+
+    # line plots for different grid sizes
+    elif args.mode == 'dimension':
+        step = 0.05 # 0.005 maybe
+        dimension=[10, 25, 100]
+        multiple_results = {}
+        for d in dimension:
+            results = dimension_experiment(
+                densities=np.arange(0.5, 0.9 + step, step),
+                n_experiments=2,
+                n_simulations=2,
+                veg_ratio=veg_ratio,
+                grid_type=args.grid_type,
+                dimension=d,
+                burnup_time=burnup_t,
+                neighbourhood_type="moore",
+                visualize=False,
+                save_data=False,
+                make_plot=False
+            )
+            # save percolation probabilities per experiment in a dictionary
+            if d in multiple_results:
+                multiple_results[d].append(results)
+            else:
+                multiple_results[d] = [results]
+
+        dimension_plot(multiple_results, savefig=False)
+    # need to use forest2.py for this mode
+    elif args.mode == 'name':
+        model = Forest(
+            grid_type=args.grid_type,
+            dimension=31,
+            density=density,
+            burnup_time=2,
+            veg_ratio=veg_ratio,
+            neighbourhood_type="moore",
+            visualize=True
+        )
+        
+        model.simulate()
