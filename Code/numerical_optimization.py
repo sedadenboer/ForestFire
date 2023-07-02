@@ -6,10 +6,11 @@
 # Description: The original codes are slow for large scale experiments,
 # this script optimizes the process with numpy vectorization features
 #
-# Dependencies: vegetation.py, constants.py
+# Dependencies: vegetation.py, constants.py plot.py
 
 import numpy as np
 import constants as const
+from plot import ignition_vs_ratio_heatmap
 from typing import List, Union
 import multiprocessing as mp
 import os
@@ -175,9 +176,9 @@ def experiments(rep: int, density: float):
     """
     
     # Heatmap experiments
-    dimension = 100
+    dimension = 50
     density = density
-    setp_size = 0.05
+    setp_size = 0.1
     veg_ratios = np.arange(0.00, 1.00 + setp_size, setp_size)
     igni_probs = np.arange(0.00, 1.00 + setp_size, setp_size)
     burnup_t = 10
@@ -225,6 +226,10 @@ def experiments(rep: int, density: float):
             
         with open(filepath_area + f'/{filename_area}.json', 'w') as fp:
             json.dump(avg_burn_dict, fp)
+            
+    # For visualization
+    filename = 'perco_prob'
+    ignition_vs_ratio_heatmap(perco_prob_dict, veg_ratios, filename, savefig=False)
 
 
 if __name__ == "__main__":
@@ -235,7 +240,7 @@ if __name__ == "__main__":
     
     import functools
     
-    for density in [0.5]:
+    for density in [0.6]:
         
         pool.map(functools.partial(experiments, density=density), rep)
     
