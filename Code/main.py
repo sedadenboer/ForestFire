@@ -160,7 +160,6 @@ if __name__ == "__main__":
                 neighbourhood_type="moore",
                 visualize=False,
                 save_data=False,
-                make_plot=False
         )
             burn_time.append(burn)
             gof.append(results[0])
@@ -184,8 +183,6 @@ if __name__ == "__main__":
                 burnup_time=burnup_t,
                 neighbourhood_type="moore",
                 visualize=False,
-                save_data=False,
-                make_plot=False
             )
             # save percolation probabilities per experiment in a dictionary
             if d in multiple_results:

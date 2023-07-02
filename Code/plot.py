@@ -111,7 +111,6 @@ def beta_plot(data: Dict, filename: str, crit_density: float, savefig: bool) -> 
         data (Dict): percolation data of experiment
         savefig (bool): True if figure should be saved, otherwise False
     """
-    step = 0.05
     # create a DataFrame from the dictionary
     df = pd.DataFrame.from_dict(data)
     # reset the index and melt the DataFrame
@@ -119,7 +118,7 @@ def beta_plot(data: Dict, filename: str, crit_density: float, savefig: bool) -> 
     # rename the columns
     df = df.rename(columns={'index': 'Experiment Number'})
     # linear fit of (p-p_c) as variable
-    # Function to calculate the power-law with constants a and b
+    # function to calculate the power-law with constants a and b
     def power_law(x, a, b):
         return a * x ** b
 
@@ -127,7 +126,6 @@ def beta_plot(data: Dict, filename: str, crit_density: float, savefig: bool) -> 
     test_p = np.array(df['p'])
     print(test_p)
     print(df['Probability'])
-
 
     pars, cov = curve_fit(f=power_law, xdata=np.array(df['p']) - crit_density, ydata=df['Probability'], bounds=(-np.inf, np.inf))
     perr = np.sqrt(np.diag(cov))
@@ -148,8 +146,6 @@ def beta_plot(data: Dict, filename: str, crit_density: float, savefig: bool) -> 
     plt.figure()
     plt.xlabel('p')
     plt.ylabel('Probability of percolation')
-    if savefig:
-        plt.savefig(f'Plots/beta_{filename}.png', dpi=400)
     plt.text(0.01, 0.2, f'\u03B2 ={beta}', fontsize=20)
     plt.plot(test_p - crit_density, fit_data, 'r', label='fit')
     plt.errorbar(test_p - crit_density, fit_data, yerr=perr[1], color='brown')
@@ -157,8 +153,11 @@ def beta_plot(data: Dict, filename: str, crit_density: float, savefig: bool) -> 
     plt.xscale('log')
     plt.yscale('log')
     plt.legend()
+
+    if savefig:
+        plt.savefig(f'Plots/beta_{filename}.png', dpi=400)
+
     plt.show()
-    plt.savefig(f'dimension.png', dpi=400)
 
     return pars[1], r2
 
@@ -174,6 +173,9 @@ def burn_plot(burn_times: list, gof: list, savefig: bool) -> None:
     plt.scatter(burn_times, gof)
     plt.xlabel('burnup time')
     plt.ylabel('goodnes of fit value')
+    if savefig:
+        plt.savefig('Plots/burn_plot.png', dpi=400)
+
     plt.show()
 
 def dimension_plot(data, savefig: bool) -> None:
@@ -200,7 +202,9 @@ def dimension_plot(data, savefig: bool) -> None:
         sns.lineplot(data=df, x='p', y='Probability', markers=True, dashes=False, label=f'{d}')
         plt.xlabel('p')
         plt.ylabel('Probability of percolation')
-        # if savefig:
-        #     plt.savefig(f'Plots/dimensions_{filename}.png', dpi=400)
+
+    if savefig:
+        plt.savefig(f'Plots/dimensions.png', dpi=400)
+
     plt.legend()
     plt.show()

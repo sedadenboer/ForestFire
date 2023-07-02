@@ -260,8 +260,8 @@ def ignition_vs_ratio_2(density: int, n_simulations: int,
     return percolation_info
 
 def beta_experiment(densities: np.ndarray, n_experiments: int, n_simulations: int,
-                       grid_type: str, veg_ratio: List[float], dimension: int, burnup_time: int, neighbourhood_type: str,
-                       visualize: bool, save_data: bool, make_plot: bool) -> Dict:
+                    grid_type: str, veg_ratio: List[float], dimension: int, burnup_time: int, neighbourhood_type: str,
+                    visualize: bool, save_data: bool, make_plot: bool) -> Dict:
     """Runs n experiments for different values of p. For every experiment a simulation
     with the same settings is repeated m times, from which the percolation probability
     for that value of p is calculated. These probabilities are saved into a dictionary.
@@ -349,7 +349,6 @@ def beta_experiment(densities: np.ndarray, n_experiments: int, n_simulations: in
     return beta_info
 
 def get_fitness(data: Dict, crit_density: float) -> float:
-    step = 0.01
     # create a DataFrame from the dictionary
     df = pd.DataFrame.from_dict(data)
     # reset the index and melt the DataFrame
@@ -378,8 +377,8 @@ def get_fitness(data: Dict, crit_density: float) -> float:
     return r2
 
 def burn_experiment(densities: np.ndarray, n_experiments: int, n_simulations: int,
-                       grid_type: str, veg_ratio: List[float], dimension: int, burnup_time: int, neighbourhood_type: str,
-                       visualize: bool, save_data: bool, make_plot: bool) -> Dict:
+                    grid_type: str, veg_ratio: List[float], dimension: int, burnup_time: int, neighbourhood_type: str,
+                    visualize: bool, save_data: bool) -> Dict:
     """Runs n experiments for different values of p. For every experiment a simulation
     with the same settings is repeated m times, from which the percolation probability
     for that value of p is calculated. These probabilities are saved into a dictionary.
@@ -472,9 +471,9 @@ def burn_experiment(densities: np.ndarray, n_experiments: int, n_simulations: in
 
     return goodness_of_fit, variance
 
-def dimension_experiment(densities: np.ndarray, n_experiments: int, n_simulations: int,
-                       grid_type: str, veg_ratio: List[float], dimension: int, burnup_time: int, neighbourhood_type: str,
-                       visualize: bool, save_data: bool, make_plot: bool) -> Dict:
+def dimension_experiment(densities: np.ndarray, n_experiments: int, n_simulations: int, grid_type: str,
+                         veg_ratio: List[float], dimension: int, burnup_time: int, neighbourhood_type: str,
+                         visualize: bool) -> Dict:
     """Runs n experiments for different values of p. For every experiment a simulation
     with the same settings is repeated m times, from which the percolation probability
     for that value of p is calculated. for different dimensions These probabilities are saved into a dictionary.
@@ -489,8 +488,6 @@ def dimension_experiment(densities: np.ndarray, n_experiments: int, n_simulation
         burnup_time (int): burnup time for Trees
         neighbourhood_type (str): neighbourhood model ("moore" or "von_neumann")
         visualize (bool): whether to visualize the Forest model
-        save_data (bool): whether to save the percolation data
-        make_plot (bool): whether to make a lineplot
 
     Returns:
         Dict: Dictionary with percolation probabilities for different p values
@@ -542,12 +539,5 @@ def dimension_experiment(densities: np.ndarray, n_experiments: int, n_simulation
     print()
     print(dimension_info)
     print('critical density:', crit_density)
-
-    # filename = f'dimension_nexp={n_experiments}_nsim={n_simulations}_grtype={grid_type}_d={dimension}_btime={burnup_time}_nbh={neighbourhood_type}_critd={crit_density}'
-    # if save_data:
-    #     with open(f'Output/{filename}.json', 'w') as fp:
-    #         json.dump(dimension_info, fp)
-    # if make_plot:
-    #     dimension_plot(dimension_info, filename, crit_density, savefig=False)
 
     return dimension_info
