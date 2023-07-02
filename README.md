@@ -80,7 +80,11 @@ Example:\
 ![Forest fire simulation](Code/Output/simulation_animation.gif)
 
 ### Vectorized parallel version for the forest density / plant ratio experiment
-#TODO
+The relationship between percolation probability and forest density / vegetation ratio is of interest. In order to obtain statistically significant results, the experiments need to be repeated many times. During the experiments, it is found that the original codes are slow for large scale and long burn up time simulation. In this case, the codes are heavily optimized, by utilizing Numpy vectorization feature, as well as the `multiprocessing` parallelization. The optimized codes can be run with the following command:
+
+`python numerical_optimization.py`
+
+For the sake of simplicity, the optimized script does not take command line arguments. To modify the parameters, please change the `dimension`, `density`, `step_size`, `veg_ratios`, `igni_probs`, `burnup_t` variables in the script directly.
 
 ## Authors
 - [@sedadenboer](https://github.com/sedadenboer)
